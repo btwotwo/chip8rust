@@ -1,0 +1,7 @@
+[package]
+name = "chip8rust"
+version = "0.1.0"
+authors = ["btwotwo"]
+edition = "2018"
+
+[dependencies]
