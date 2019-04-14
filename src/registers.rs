@@ -1,3 +1,5 @@
+use std::ops::{Index, IndexMut};
+
 pub struct Registers {
     regs: [u8; 16],
 }
@@ -14,28 +16,52 @@ impl Registers {
         Registers { regs: [0; 16] }
     }
 
-    pub fn get(&self, index: u8) -> u8 {
-        self.regs[index as usize]
-    }
-
-    pub fn set(&mut self, index: u8, value: u8) {
-        self.regs[index as usize] = value;
-    }
-
     pub fn add_immediate(&mut self, index: u8, value: u8) {
-        let (result, _) = self.regs[index as usize].overflowing_add(value);
-        self.regs[index as usize] = result;
+        let (result, _) = self[index].overflowing_add(value);
+        self[index] = result;
     }
 
-    /// Returns register by its position
-    pub fn get_by_position(&self, opcode: u16, position: Position) -> u8 {
-        self.get(Registers::get_index_by_position(opcode, position))
+    pub fn add_reg(&mut self, left: u8, right: u8) -> bool {
+        let (result, carried) = self[left].overflowing_add(self[right]);
+        self[left] = result;
+
+        carried
     }
 
-    pub fn get_index_by_position(opcode: u16, position: Position) -> u8 {
+    pub fn get_index(opcode: u16, position: Position) -> u8 {
         match position {
             Position::X => ((opcode & 0x0F00) >> 8) as u8,
             Position::Y => ((opcode & 0x00F0) >> 4) as u8,
         }
+    }
+}
+
+impl Index<u8> for Registers {
+    type Output = u8;
+
+    fn index(&self, index: u8) -> &Self::Output {
+        &self.regs[index as usize]
+    }
+}
+
+impl Index<(u16, Position)> for Registers {
+    type Output = u8;
+
+    fn index(&self, index: (u16, Position)) -> &Self::Output {
+        let index = Registers::get_index(index.0, index.1);
+        &self.regs[index as usize]
+    }
+}
+
+impl IndexMut<(u16, Position)> for Registers {
+    fn index_mut(&mut self, index: (u16, Position)) -> &mut Self::Output {
+        let index = Registers::get_index(index.0, index.1);
+        &mut self.regs[index as usize]
+    }
+}
+
+impl IndexMut<u8> for Registers {
+    fn index_mut(&mut self, index: u8) -> &mut Self::Output {
+        &mut self.regs[index as usize]
     }
 }

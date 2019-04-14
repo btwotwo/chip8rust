@@ -1,6 +1,6 @@
 use super::*;
 
-fn assert_pc_increment(chip: &mut Chip) {
+fn assert_pc_increment(chip: &Chip) {
     assert_eq!(chip.program_counter, 514);
 }
 
@@ -44,8 +44,8 @@ fn call_test() {
 fn se_test() {
     let mut chip = Chip::new();
     chip.program_counter.set(12);
-    chip.v.set(4, 0x12);
-    chip.v.set(5, 0x10);
+    chip.v[4] = 0x12;
+    chip.v[5] = 0x10;
 
     se(0x3412, &mut chip);
 
@@ -60,8 +60,8 @@ fn se_test() {
 fn sne_test() {
     let mut chip = Chip::new();
     chip.program_counter.set(12);
-    chip.v.set(4, 0x12);
-    chip.v.set(5, 0x10);
+    chip.v[4] = 0x12;
+    chip.v[5] = 0x10;
 
     sne(0x4412, &mut chip);
 
@@ -78,9 +78,9 @@ fn sre_test() {
 
     chip.program_counter.set(12);
 
-    chip.v.set(4, 0x12);
-    chip.v.set(5, 0x12);
-    chip.v.set(6, 0x13);
+    chip.v[4] = 0x12;
+    chip.v[5] = 0x12;
+    chip.v[6] = 0x13;
 
     sre(0x5450, &mut chip);
 
@@ -95,11 +95,11 @@ fn sre_test() {
 fn ld_test() {
     let mut chip = Chip::new();
 
-    chip.v.set(0xE, 0xAB);
+    chip.v[0xE] = 0xAB;
 
     ld(0x6EAB, &mut chip);
 
-    assert_eq!(chip.v.get(0xE), 0xAB);
+    assert_eq!(chip.v[0xE], 0xAB);
     assert_pc_increment(&mut chip);
 }
 
@@ -107,11 +107,11 @@ fn ld_test() {
 fn add_test() {
     let mut chip = Chip::new();
 
-    chip.v.set(0x5, 0x1);
+    chip.v[0x5] = 0x1;
 
     add(0x75AB, &mut chip);
 
-    assert_eq!(chip.v.get(0x5), 0xAC);
+    assert_eq!(chip.v[0x5], 0xAC);
     assert_pc_increment(&mut chip);
 }
 
@@ -119,10 +119,93 @@ fn add_test() {
 fn add_overflow_test() {
     let mut chip = Chip::new();
 
-    chip.v.set(0x5, 0xFF);
+    chip.v[0x5] = 0xFF;
 
     add(0x7502, &mut chip);
 
-    assert_eq!(chip.v.get(0x5), 0x1);
+    assert_eq!(chip.v[0x5], 0x1);
     assert_pc_increment(&mut chip);
+}
+
+#[test]
+fn ldr_test() {
+    let mut chip = Chip::new();
+    chip.v[1] = 111;
+    chip.v[2] = 222;
+
+    ldr(0x8120, &mut chip);
+
+    assert_eq!(chip.v[1], 222);
+    assert_pc_increment(&chip);
+}
+
+#[test]
+fn or_test() {
+    let mut chip = Chip::new();
+    chip.v[1] = 0x12;
+    chip.v[2] = 0x34;
+
+    or(0x8121, &mut chip);
+    assert_eq!(chip.v[1], 0x36);
+    assert_eq!(chip.v[2], 0x34);
+
+    assert_pc_increment(&chip);
+}
+
+#[test]
+fn and_test() {
+    let mut chip = Chip::new();
+
+    chip.v[1] = 0x12;
+    chip.v[2] = 0x34;
+
+    and(0x8122, &mut chip);
+
+    assert_eq!(chip.v[1], 0x10);
+    assert_eq!(chip.v[2], 0x34);
+    assert_pc_increment(&chip);
+}
+
+#[test]
+fn xor_test() {
+    let mut chip = Chip::new();
+
+    chip.v[1] = 0x12;
+    chip.v[2] = 0x34;
+
+    xor(0x8123, &mut chip);
+
+    assert_eq!(chip.v[1], 0x26);
+    assert_eq!(chip.v[2], 0x34);
+    assert_pc_increment(&chip);
+}
+
+#[test]
+fn addreg_test() {
+    let mut chip = Chip::new();
+
+    chip.v[0] = 0x20;
+    chip.v[1] = 0x01;
+
+    addreg(0x8014, &mut chip);
+
+    assert_eq!(chip.v[0], 0x21);
+    assert_eq!(chip.v[1], 0x01);
+    assert_eq!(chip.v[0xF], 0);
+    assert_pc_increment(&chip);
+}
+
+#[test]
+fn addreg_carry_test() {
+    let mut chip = Chip::new();
+
+    chip.v[0] = 0xFF;
+    chip.v[1] = 0x02;
+
+    addreg(0x8014, &mut chip);
+
+    assert_eq!(chip.v[0], 0x01);
+    assert_eq!(chip.v[1], 0x02);
+    assert_eq!(chip.v[0xF], 1);
+    assert_pc_increment(&chip);
 }

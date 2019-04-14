@@ -31,7 +31,12 @@ impl OpcodeHandler {
             0x4000 => sne,
             0x5000 => sre,
             0x6000 => ld,
-            0x7000 => add
+            0x7000 => add,
+            0x8000 => ldr,
+            0x8001 => or,
+            0x8002 => and,
+            0x8003 => xor,
+            0x8004 => addreg
         );
 
         OpcodeHandler { opcode_map: map }
@@ -58,7 +63,7 @@ fn call(opcode: Opcode, chip: &mut Chip) {
 fn se(opcode: Opcode, chip: &mut Chip) {
     let register_index = (opcode & 0x0f00) >> 8;
     let compare = (opcode & 0x00FF) as u8;
-    let register = chip.v.get_by_position(opcode, Position::X);
+    let register = chip.v[(opcode, Position::X)];
 
     if register == compare {
         chip.program_counter.skip(1);
@@ -69,7 +74,7 @@ fn se(opcode: Opcode, chip: &mut Chip) {
 
 //skip if not equal
 fn sne(opcode: Opcode, chip: &mut Chip) {
-    let register = chip.v.get_by_position(opcode, Position::X);
+    let register = chip.v[(opcode, Position::X)];
     let to_compare = (opcode & 0x00FF) as u8;
 
     if register != to_compare {
@@ -81,8 +86,8 @@ fn sne(opcode: Opcode, chip: &mut Chip) {
 
 ///Skip if registers equal
 fn sre(opcode: Opcode, chip: &mut Chip) {
-    let first_register = chip.v.get_by_position(opcode, Position::X);
-    let second_register = chip.v.get_by_position(opcode, Position::Y);
+    let first_register = chip.v[(opcode, Position::X)];
+    let second_register = chip.v[(opcode, Position::Y)];
 
     if first_register == second_register {
         chip.program_counter.skip(1);
@@ -93,15 +98,53 @@ fn sre(opcode: Opcode, chip: &mut Chip) {
 
 ///Set Vx equal NN bytes
 fn ld(opcode: Opcode, chip: &mut Chip) {
-    let index = Registers::get_index_by_position(opcode, Position::X);
-    chip.v.set(index, (opcode & 0x00FF) as u8);
+    chip.v[(opcode, Position::X)] = (opcode & 0x00FF) as u8;
     chip.program_counter.increment();
 }
 
 fn add(opcode: Opcode, chip: &mut Chip) {
-    let index = Registers::get_index_by_position(opcode, Position::X);
+    let index = Registers::get_index(opcode, Position::X);
     chip.v.add_immediate(index, (opcode & 0x00FF) as u8);
     chip.program_counter.increment();
+}
+
+fn ldr(opcode: Opcode, chip: &mut Chip) {
+    chip.v[(opcode, Position::X)] = chip.v[(opcode, Position::Y)];
+    chip.program_counter.increment();
+}
+
+fn or(opcode: Opcode, chip: &mut Chip) {
+    chip.v[(opcode, Position::X)] |= chip.v[(opcode, Position::Y)];
+    chip.program_counter.increment();
+}
+
+fn and(opcode: Opcode, chip: &mut Chip) {
+    chip.v[(opcode, Position::X)] &= chip.v[(opcode, Position::Y)];
+    chip.program_counter.increment();
+}
+
+fn xor(opcode: Opcode, chip: &mut Chip) {
+    chip.v[(opcode, Position::X)] ^= chip.v[(opcode, Position::Y)];
+    chip.program_counter.increment();
+}
+
+fn addreg(opcode: Opcode, chip: &mut Chip) {
+    let left_index = Registers::get_index(opcode, Position::X);
+    let right_index = Registers::get_index(opcode, Position::Y);
+
+    let carried = chip.v.add_reg(left_index, right_index);
+
+    if carried {
+        chip.v[0xF] = 1;
+    } else {
+        chip.v[0xF] = 0;
+    }
+
+    chip.program_counter.increment();
+}
+
+fn subreg(opcode: Opcode, chip: &mut Chip) {
+    
 }
 
 #[cfg(test)]
