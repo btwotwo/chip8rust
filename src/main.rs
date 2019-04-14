@@ -1,9 +1,12 @@
 mod display;
 mod opcode;
+mod program_counter;
+mod registers;
 
 use opcode::Opcode;
+use program_counter::ProgramCounter;
+use registers::Registers;
 
-pub type Registers = [u8; 16];
 pub type Memory = [u8; 4096];
 pub type Stack = [u16; 16];
 
@@ -41,10 +44,10 @@ impl Chip {
     pub fn new() -> Chip {
         Chip {
             current_opcode: 0,
-            program_counter: ProgramCounter(0x200),
+            program_counter: ProgramCounter::new(0x200),
             memory: [0; 4096],
 
-            v: [0; 16],
+            v: Registers::new(),
             i: 0,
 
             screen: [false; 64 * 32],
@@ -81,32 +84,5 @@ impl Chip {
         let first_byte = self.memory[memory_pointer] as u16;
         let second_byte = self.memory[memory_pointer + 1] as u16;
         self.current_opcode = first_byte << 8 | second_byte
-    }
-}
-
-#[derive(Debug)]
-pub struct ProgramCounter(u16);
-
-impl ProgramCounter {
-    fn set(&mut self, num: u16) {
-        self.0 = num;
-    }
-
-    fn get(&self) -> u16 {
-        self.0
-    }
-
-    fn increment(&mut self) {
-        self.0 += 2;
-    }
-
-    fn skip(&mut self, num: u16) {
-        self.0 += (2 * num) + 2; // we're skipping "n" instructions. that means that we should move to the next instruction and skip n after that
-    }
-}
-
-impl PartialEq<u16> for ProgramCounter {
-    fn eq(&self, other: &u16) -> bool {
-        self.0 == *other
     }
 }
