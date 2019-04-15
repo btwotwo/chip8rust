@@ -186,6 +186,7 @@ fn addreg_test() {
 
     chip.v[0] = 0x20;
     chip.v[1] = 0x01;
+    chip.v[0xF] = 1;
 
     addreg(0x8014, &mut chip);
 
@@ -201,11 +202,44 @@ fn addreg_carry_test() {
 
     chip.v[0] = 0xFF;
     chip.v[1] = 0x02;
+    chip.v[0xF] = 0;
 
     addreg(0x8014, &mut chip);
 
     assert_eq!(chip.v[0], 0x01);
     assert_eq!(chip.v[1], 0x02);
+    assert_eq!(chip.v[0xF], 1);
+    assert_pc_increment(&chip);
+}
+
+#[test]
+fn subreg_test() {
+    let mut chip = Chip::new();
+
+    chip.v[0] = 0x20;
+    chip.v[1] = 0x01;
+    chip.v[0xF] = 1;
+
+    subreg(0x8015, &mut chip);
+
+    assert_eq!(chip.v[0], 0x1F);
+    assert_eq!(chip.v[1], 0x01);
+    assert_eq!(chip.v[0xF], 0);
+    assert_pc_increment(&chip);
+}
+
+#[test]
+fn subreg_carry_test() {
+    let mut chip = Chip::new();
+
+    chip.v[0] = 0x00;
+    chip.v[1] = 0x01;
+    chip.v[0xF] = 0;
+
+    subreg(0x8015, &mut chip);
+
+    assert_eq!(chip.v[0], 0xFF);
+    assert_eq!(chip.v[1], 0x01);
     assert_eq!(chip.v[0xF], 1);
     assert_pc_increment(&chip);
 }

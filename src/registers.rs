@@ -21,17 +21,18 @@ impl Registers {
         self[index] = result;
     }
 
-    pub fn add_reg(&mut self, left: u8, right: u8) -> bool {
-        let (result, carried) = self[left].overflowing_add(self[right]);
-        self[left] = result;
-
-        carried
-    }
-
     pub fn get_index(opcode: u16, position: Position) -> u8 {
         match position {
             Position::X => ((opcode & 0x0F00) >> 8) as u8,
             Position::Y => ((opcode & 0x00F0) >> 4) as u8,
+        }
+    }
+
+    pub fn set_carry(&mut self, carried: bool) {
+        if carried {
+            self[0xF] = 1;
+        } else {
+            self[0xF] = 0;
         }
     }
 }
