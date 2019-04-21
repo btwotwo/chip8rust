@@ -1,7 +1,7 @@
 use super::*;
 
 fn assert_pc_increment(chip: &Chip) {
-    assert_eq!(chip.program_counter, 514);
+    assert_eq!(chip.program_counter, 514, "Forgot to increment program counter.");
 }
 
 #[test]
@@ -242,4 +242,47 @@ fn subreg_carry_test() {
     assert_eq!(chip.v[1], 0x01);
     assert_eq!(chip.v[0xF], 1);
     assert_pc_increment(&chip);
+}
+
+#[test]
+fn shiftr_test() {
+    let mut chip = Chip::new();
+
+    chip.v[0] = 0x10;
+    chip.v[0xF] = 1;
+
+    shiftr(0x8016, &mut chip);
+
+    assert_eq!(chip.v[0], 0x8);
+    assert_eq!(chip.v[0xF], 0);
+    assert_pc_increment(&chip);
+}
+
+
+#[test]
+fn sub_test() {
+    let mut chip = Chip::new();
+    
+    chip.v[0] = 0;
+    chip.v[1] = 1;
+    chip.v[0xF] = 1;
+
+    sub(0x8107, &mut chip);
+
+    assert_eq!(chip.v[1], 255);
+    assert_eq!(chip.v[0xF], 1);
+}
+
+#[test]
+fn sub_test_overflow() {
+    let mut chip = Chip::new();
+
+    chip.v[0] = 0;
+    chip.v[1] = 1;
+    chip.v[0xF] = 1;
+
+    sub(0x8017, &mut chip);   
+
+    assert_eq!(chip.v[0], 1);
+    assert_eq!(chip.v[0xF], 0);
 }

@@ -37,7 +37,8 @@ impl OpcodeHandler {
             0x8002 => and,
             0x8003 => xor,
             0x8004 => addreg,
-            0x8005 => subreg
+            0x8005 => subreg,
+            0x8006 => shiftr
         );
 
         OpcodeHandler { opcode_map: map }
@@ -159,8 +160,22 @@ fn subreg(opcode: Opcode, chip: &mut Chip) {
     chip.program_counter.increment();
 }
 
-///Store least significant bit of Vx in Vf and then shift Vx to the right by 1
+///Store least significant bit of Vx in VF and then shift Vx to the right by 1
 fn shiftr(opcode: Opcode, chip: &mut Chip) {
+    chip.v[0xF] = chip.v[(opcode, Position::X)] & 1;
+    chip.v[(opcode, Position::X)] >>= 1;
+    chip.program_counter.increment();
+}
+
+fn sub(opcode: Opcode, chip: &mut Chip) {
+    let x = chip.v[(opcode, Position::X)];
+    let y = chip.v[(opcode, Position::Y)];
+    let (result, carried) = y.overflowing_sub(x);
+
+    chip.v[(opcode, Position::X)] = result;
+
+    chip.v.set_carry(carried);
+    chip.program_counter.increment();
 }
 
 #[cfg(test)]
