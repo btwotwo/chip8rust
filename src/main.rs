@@ -81,8 +81,8 @@ impl Chip {
 
     fn set_opcode(&mut self) {
         let memory_pointer = self.program_counter.get() as usize;
-        let first_byte = self.memory[memory_pointer] as u16;
-        let second_byte = self.memory[memory_pointer + 1] as u16;
+        let first_byte = u16::from(self.memory[memory_pointer]);
+        let second_byte = u16::from(self.memory[memory_pointer + 1]);
         self.current_opcode = first_byte << 8 | second_byte
     }
 }

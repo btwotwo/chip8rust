@@ -17,10 +17,6 @@ impl ProgramCounter {
     pub fn increment(&mut self) {
         self.0 += 2;
     }
-
-    pub fn skip(&mut self, num: u16) {
-        self.0 += (2 * num) + 2; // we're skipping "n" instructions. that means that we should move to the next instruction and skip n after that
-    }
 }
 
 impl PartialEq<u16> for ProgramCounter {
