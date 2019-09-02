@@ -312,3 +312,43 @@ fn shiftl_test_significant_one() {
     assert_eq!(chip.v[0], 0b0001_001_0);
     assert_eq!(chip.v[0xf], 1);
 }
+
+
+#[test]
+fn srne_test_eq() {
+    let (mut chip, handler) = prepare(0x9120);
+
+    chip.program_counter.set(12);
+    
+    chip.v[1] = 0x12;
+    chip.v[2] = 0x12;
+
+    handler.srne(&mut chip);
+
+    assert_eq!(chip.program_counter, 12);
+}
+
+#[test]
+fn srne_test_neq() {
+    let (mut chip, handler) = prepare(0x9120);
+
+    chip.program_counter.set(12);
+    
+    chip.v[1] = 0x12;
+    chip.v[2] = 0x13;
+
+    handler.srne(&mut chip);
+
+    assert_eq!(chip.program_counter, 14);
+}
+
+#[test]
+fn jmpv0_test() {
+    let (mut chip, handler) = prepare(0xA123);
+    chip.v[0] = 0x0002;
+    chip.program_counter.set(0x1);
+
+    handler.jmpv0(&mut chip);
+
+    assert_eq!(chip.program_counter, 0x0125)
+}

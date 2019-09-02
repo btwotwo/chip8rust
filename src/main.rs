@@ -27,11 +27,17 @@ fn main() {
 pub struct Chip {
     current_opcode: Opcode,
     pub memory: Memory,
-    pub v: Registers, //registers (V0-VE), VF is "carry flag"
-    pub i: u16,       // address register
+
+    /// Main registers of the chip (V0 - VE), VF is used as carry flag.
+    pub v: Registers,
+
+    /// Special "I" register, generaly used to store memory addresses.
+    pub i: u16,
+
+    /// Index of the current instruction.
     pub program_counter: ProgramCounter,
 
-    screen: [bool; 64 * 32], //maybe enum?
+    screen: [bool; 64 * 32],
 
     pub delay_timer: u8,
     pub sound_timer: u8,
@@ -44,12 +50,13 @@ impl Chip {
     pub fn new() -> Chip {
         Chip {
             current_opcode: 0,
+
             program_counter: ProgramCounter::new(0x200),
             memory: [0; 4096],
 
             v: Registers::new(),
-            i: 0,
 
+            i: 0,
             screen: [false; 64 * 32],
             stack: [0; 16],
 

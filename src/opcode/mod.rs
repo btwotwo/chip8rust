@@ -15,7 +15,6 @@ macro_rules! opcode_func_map {
 }
 
 pub type Opcode = u16;
-pub type ShouldIncrementPc = bool;
 type OpcodeImpl = fn(&OpcodeHandler, &mut Chip);
 
 struct OpcodeHandler {
@@ -43,7 +42,9 @@ impl OpcodeHandler {
             0x8006 => OpcodeHandler::shiftr,
             0x8007 => OpcodeHandler::sub,
             0x800E => OpcodeHandler::shiftl,
-            0x9000 => OpcodeHandler::snexy
+            0x9000 => OpcodeHandler::srne,
+            0xA000 => OpcodeHandler::ldi,
+            0xB000 => OpcodeHandler::jmpv0 
         );
 
         OpcodeHandler {
@@ -52,7 +53,9 @@ impl OpcodeHandler {
         }
     }
 
-    pub fn next(&self, opcode: Opcode, chip: &mut Chip) {
+    pub fn next(&mut self, opcode: Opcode, chip: &mut Chip) {
+        self.current = opcode;
+
         let normalized_opcode = opcode & 0xF000;
         let normalized_opcode = match normalized_opcode {
             0x0000 => opcode & 0x00FF,
@@ -69,31 +72,31 @@ impl OpcodeHandler {
         };
 
         match normalized_opcode {
-            0x1000 | 0x2000 => (), // JP and CALL opcodes
+            0x1000 | 0x2000 | 0x00EE | 0xB000 => (), // JP, CALL, RET, JMPv0 opcodes
             _ => chip.program_counter.increment(),
         };
     }
 
-    ///Return from a subroutine (00EE)
+    /// `00EE` - Return from a subroutine
     fn ret(&self, chip: &mut Chip) {
         chip.program_counter
             .set(chip.stack[chip.stack_pointer as usize]);
         chip.stack_pointer -= 1;
     }
 
-    ///Jump to address NNN (1NNN)
+    ///`1NNN` - Jump to the address `NNN`
     fn jp(&self, chip: &mut Chip) {
         chip.program_counter.set(self.current & 0x0FFF);
     }
 
-    ///Call subroutine at NNN (2NNN)
+    ///`2NNN` - Call subroutine at `NNN`
     fn call(&self, chip: &mut Chip) {
         chip.stack_pointer += 1;
         chip.stack[chip.stack_pointer as usize] = chip.program_counter.get();
         chip.program_counter.set(self.current & 0x0FFF);
     }
 
-    //Skip if Vx equals NN (3XNN)
+    ///`3XNN` - Skip next instruction if V[`X`] equals `NN`
     fn se(&self, chip: &mut Chip) {
         let compare = (self.current & 0x00FF) as u8;
         let register = chip.v[(self.current, Position::X)];
@@ -103,7 +106,7 @@ impl OpcodeHandler {
         }
     }
 
-    //Skip if Vx doesn't equal NN (4XNN)
+    ///`4XNN` - Skip next instruction if V[`X`] doesn't equal `NN`
     fn sne(&self, chip: &mut Chip) {
         let register = chip.v[(self.current, Position::X)];
         let to_compare = (self.current & 0x00FF) as u8;
@@ -113,7 +116,7 @@ impl OpcodeHandler {
         }
     }
 
-    ///Skip if Vx equal Vy (5XY0)
+    ///`5XY0` - Skip if V[`X`] equal V[`Y`]
     fn sre(&self, chip: &mut Chip) {
         let first_register = chip.v[(self.current, Position::X)];
         let second_register = chip.v[(self.current, Position::Y)];
@@ -123,38 +126,38 @@ impl OpcodeHandler {
         }
     }
 
-    ///Set Vx to NN (6XNN)
+    ///`6XNN` - Set V[`X`] to `NN`
     fn ld(&self, chip: &mut Chip) {
         chip.v[(self.current, Position::X)] = (self.current & 0x00FF) as u8;
     }
 
-    ///Add NN to Vx, carry flag not changed (7XNN)
+    ///`7XNN` - Add `NN` to V[`X`], carry flag not changed
     fn add(&self, chip: &mut Chip) {
         let index = Registers::get_index(self.current, Position::X);
         chip.v.add_immediate(index, (self.current & 0x00FF) as u8);
     }
 
-    ///Set Vx to the value of Vy (8XY0)
+    ///`8XY0` Set V[`X`] to the value of V[`Y`]
     fn ldr(&self, chip: &mut Chip) {
         chip.v[(self.current, Position::X)] = chip.v[(self.current, Position::Y)];
     }
 
-    ///Set Vx to the result of bitwise OR with Vy (8XY1)
+    ///`8XY1` - Set V[`X`] to the result of bitwise OR with V[`Y`] 
     fn or(&self, chip: &mut Chip) {
         chip.v[(self.current, Position::X)] |= chip.v[(self.current, Position::Y)];
     }
 
-    ///Set Vx to the result of bitwise AND with Vy (8XY2)
+    ///`8XY2` - Set V[`X`] to the result of bitwise AND with V[`Y`] 
     fn and(&self, chip: &mut Chip) {
         chip.v[(self.current, Position::X)] &= chip.v[(self.current, Position::Y)];
     }
 
-    ///Set Vx to the result of bitwise XOR with Vy(8XY3)
+    ///`8XY3` - Set V[`X`] to the result of bitwise XOR with V[`Y`]
     fn xor(&self, chip: &mut Chip) {
         chip.v[(self.current, Position::X)] ^= chip.v[(self.current, Position::Y)];
     }
 
-    ///Add Vy to VX, change carry flag if there's a borrow (8XY4)
+    ///`8XY4` - Add V[`Y`] to V[`X`], change carry flag if there's a borrow 
     fn addreg(&self, chip: &mut Chip) {
         let left = chip.v[(self.current, Position::X)];
         let right = chip.v[(self.current, Position::Y)];
@@ -165,7 +168,7 @@ impl OpcodeHandler {
         chip.v.set_carry(carried);
     }
 
-    ///Subtract Vy from Vx, change carry flag if there's a borrow (8XY5)
+    ///`8XY5` - Subtract V[`Y`] from V[`X`], change carry flag if there's a borrow 
     fn subreg(&self, chip: &mut Chip) {
         let (result, carried) = chip.v[(self.current, Position::X)]
             .overflowing_sub(chip.v[(self.current, Position::Y)]);
@@ -174,13 +177,13 @@ impl OpcodeHandler {
         chip.v.set_carry(carried);
     }
 
-    ///Store least significant bit of Vx in VF and then shift Vx to the right by 1 (8X06)
+    ///`8X06` - Store least significant bit of V[`X`] in VF and then shift V[`X`] to the right by 1 
     fn shiftr(&self, chip: &mut Chip) {
         chip.v[0xF] = chip.v[(self.current, Position::X)] & 1;
         chip.v[(self.current, Position::X)] >>= 1;
     }
 
-    ///Sets VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there isn't. (8X07)
+    ///`8X07` - Sets V[`X`] to V[`Y`] minus V[`X`]. VF is set to 0 when there's a borrow, and 1 when there isn't. 
     fn sub(&self, chip: &mut Chip) {
         let x = chip.v[(self.current, Position::X)];
         let y = chip.v[(self.current, Position::Y)];
@@ -191,19 +194,31 @@ impl OpcodeHandler {
         chip.v.set_carry(carried);
     }
 
-    ///Stores the most significant bit of VX in VF and then shifts VX to the left by 1 (8X0E)
+    ///`8X0E` - Stores the most significant bit of V[`X`] in VF and then shifts V[`X`] to the left by 1 
     fn shiftl(&self, chip: &mut Chip) {
         let index = Registers::get_index(self.current, Position::X);
         chip.v[0xF] = (chip.v[index] >= 128) as u8;
         chip.v[index] <<= 1;
     }
 
-    fn snexy(&self, chip: &mut Chip) {
+    fn srne(&self, chip: &mut Chip) {
         if chip.v[(self.current, Position::X)] != chip.v[(self.current, Position::Y)] {
             chip.program_counter.increment();
         }
     }
+
+    fn ldi(&self, chip: &mut Chip) {
+        chip.i = self.current & 0x0FFF;
+    }
+
+    fn jmpv0(&self, chip: &mut Chip) {
+        let address = u16::from(chip.v[0]) + (self.current & 0x0FFF);
+        chip.program_counter.set(address);
+    }
 }
 
 #[cfg(test)]
-mod test;
+mod opcodes_tests;
+
+#[cfg(test)]
+mod handler_tests;
