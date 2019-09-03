@@ -10,18 +10,38 @@ use registers::Registers;
 pub type Memory = [u8; 4096];
 pub type Stack = [u16; 16];
 
+use cursive::Cursive;
+use cursive::views::{Canvas};
+use cursive::XY;
+use cursive::theme::{BaseColor, PaletteColor, Color};
+
 fn main() {
-    let bytecode = vec![
-        // simple program: print line, then beep
-        0x00, 0xE0, // clear screen
-        0x60, 0x20, // sets V0 to 32
-        0x61, 0x10, // sets V1 to 16
-        0xD0, 0x1F, //draw a line
-    ];
+    let mut siv = Cursive::default();
 
-    let mut chip = Chip::new();
+    let mut current_theme = siv.current_theme().clone();
+    current_theme.palette[PaletteColor::Background] = Color::Dark(BaseColor::Black);
 
-    chip.load_program(&bytecode);
+    siv.set_theme(current_theme);
+
+    let canvas = Canvas::new(())
+    .with_required_size(|_, _| XY::new(64, 64))
+    .with_draw(|_, c| {
+        c.print_box((0, 10), (20, 30), false);
+    });
+
+    siv.run();
+
+    // let bytecode = vec![
+    //     // simple program: print line, then beep
+    //     0x00, 0xE0, // clear screen
+    //     0x60, 0x20, // sets V0 to 32
+    //     0x61, 0x10, // sets V1 to 16
+    //     0xD0, 0x1F, //draw a line
+    // ];
+
+    // let mut chip = Chip::new();
+
+    // chip.load_program(&bytecode);
 }
 
 pub struct Chip {

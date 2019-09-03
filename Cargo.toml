@@ -5,3 +5,5 @@ authors = ["btwotwo"]
 edition = "2018"
 
 [dependencies]
+rand = "0.7.0"
+cursive = "0.13"
