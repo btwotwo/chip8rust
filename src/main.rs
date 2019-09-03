@@ -2,6 +2,7 @@ mod display;
 mod opcode;
 mod program_counter;
 mod registers;
+mod screen;
 
 use opcode::Opcode;
 use program_counter::ProgramCounter;
@@ -10,10 +11,12 @@ use registers::Registers;
 pub type Memory = [u8; 4096];
 pub type Stack = [u16; 16];
 
+use cursive::theme::{BaseColor, Color, PaletteColor};
+use cursive::views::Canvas;
 use cursive::Cursive;
-use cursive::views::{Canvas};
 use cursive::XY;
-use cursive::theme::{BaseColor, PaletteColor, Color};
+
+use screen::screen_view::*;
 
 fn main() {
     let mut siv = Cursive::default();
@@ -23,10 +26,8 @@ fn main() {
 
     siv.set_theme(current_theme);
 
-    let canvas = Canvas::new(())
-    .with_required_size(|_, _| XY::new(64, 64))
-    .with_draw(|_, c| {
-        c.print_box((0, 10), (20, 30), false);
+    siv.add_layer(ScreenView {
+        line_position: XY::new(14, 14)
     });
 
     siv.run();
