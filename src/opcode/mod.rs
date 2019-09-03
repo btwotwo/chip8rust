@@ -44,7 +44,7 @@ impl OpcodeHandler {
             0x800E => OpcodeHandler::shiftl,
             0x9000 => OpcodeHandler::srne,
             0xA000 => OpcodeHandler::ldi,
-            0xB000 => OpcodeHandler::jmpv0 
+            0xB000 => OpcodeHandler::jmpv0
         );
 
         OpcodeHandler {
@@ -142,12 +142,12 @@ impl OpcodeHandler {
         chip.v[(self.current, Position::X)] = chip.v[(self.current, Position::Y)];
     }
 
-    ///`8XY1` - Set V[`X`] to the result of bitwise OR with V[`Y`] 
+    ///`8XY1` - Set V[`X`] to the result of bitwise OR with V[`Y`]
     fn or(&self, chip: &mut Chip) {
         chip.v[(self.current, Position::X)] |= chip.v[(self.current, Position::Y)];
     }
 
-    ///`8XY2` - Set V[`X`] to the result of bitwise AND with V[`Y`] 
+    ///`8XY2` - Set V[`X`] to the result of bitwise AND with V[`Y`]
     fn and(&self, chip: &mut Chip) {
         chip.v[(self.current, Position::X)] &= chip.v[(self.current, Position::Y)];
     }
@@ -157,7 +157,7 @@ impl OpcodeHandler {
         chip.v[(self.current, Position::X)] ^= chip.v[(self.current, Position::Y)];
     }
 
-    ///`8XY4` - Add V[`Y`] to V[`X`], change carry flag if there's a borrow 
+    ///`8XY4` - Add V[`Y`] to V[`X`], change carry flag if there's a borrow
     fn addreg(&self, chip: &mut Chip) {
         let left = chip.v[(self.current, Position::X)];
         let right = chip.v[(self.current, Position::Y)];
@@ -168,7 +168,7 @@ impl OpcodeHandler {
         chip.v.set_carry(carried);
     }
 
-    ///`8XY5` - Subtract V[`Y`] from V[`X`], change carry flag if there's a borrow 
+    ///`8XY5` - Subtract V[`Y`] from V[`X`], change carry flag if there's a borrow
     fn subreg(&self, chip: &mut Chip) {
         let (result, carried) = chip.v[(self.current, Position::X)]
             .overflowing_sub(chip.v[(self.current, Position::Y)]);
@@ -177,13 +177,13 @@ impl OpcodeHandler {
         chip.v.set_carry(carried);
     }
 
-    ///`8X06` - Store least significant bit of V[`X`] in VF and then shift V[`X`] to the right by 1 
+    ///`8XY6` - Store least significant bit of V[`X`] in VF and then shift V[`X`] to the right by 1
     fn shiftr(&self, chip: &mut Chip) {
         chip.v[0xF] = chip.v[(self.current, Position::X)] & 1;
         chip.v[(self.current, Position::X)] >>= 1;
     }
 
-    ///`8X07` - Sets V[`X`] to V[`Y`] minus V[`X`]. VF is set to 0 when there's a borrow, and 1 when there isn't. 
+    ///`8XY7` - Sets V[`X`] to V[`Y`] minus V[`X`]. VF is set to 0 when there's a borrow, and 1 when there isn't.
     fn sub(&self, chip: &mut Chip) {
         let x = chip.v[(self.current, Position::X)];
         let y = chip.v[(self.current, Position::Y)];
@@ -194,26 +194,40 @@ impl OpcodeHandler {
         chip.v.set_carry(carried);
     }
 
-    ///`8X0E` - Stores the most significant bit of V[`X`] in VF and then shifts V[`X`] to the left by 1 
+    ///`8XYE` - Stores the most significant bit of V[`X`] in VF and then shifts V[`X`] to the left by 1
     fn shiftl(&self, chip: &mut Chip) {
         let index = Registers::get_index(self.current, Position::X);
         chip.v[0xF] = (chip.v[index] >= 128) as u8;
         chip.v[index] <<= 1;
     }
 
+    ///`9XY0` - Skips the next instruction if V[`X`] does not equal V[`Y`]
     fn srne(&self, chip: &mut Chip) {
         if chip.v[(self.current, Position::X)] != chip.v[(self.current, Position::Y)] {
             chip.program_counter.increment();
         }
     }
 
+    ///`ANNN` - Set I to address NNN
     fn ldi(&self, chip: &mut Chip) {
         chip.i = self.current & 0x0FFF;
     }
 
+    ///`BNNN` - Jump to the address NNN plus V[0]
     fn jmpv0(&self, chip: &mut Chip) {
         let address = u16::from(chip.v[0]) + (self.current & 0x0FFF);
         chip.program_counter.set(address);
+    }
+
+    ///`CXNN` - Set V[`X`] equal `random_number & NN`
+    fn rand(&self, chip: &mut Chip) {
+        use rand::Rng;
+        let mut rng = rand::thread_rng();
+
+        let random = rng.gen_range(0, 256) as u8;
+        let nn = (self.current & 0x00FF) as u8;
+
+        chip.v[(self.current, Position::X)] = random & nn;
     }
 }
 

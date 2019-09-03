@@ -313,13 +313,12 @@ fn shiftl_test_significant_one() {
     assert_eq!(chip.v[0xf], 1);
 }
 
-
 #[test]
 fn srne_test_eq() {
     let (mut chip, handler) = prepare(0x9120);
 
     chip.program_counter.set(12);
-    
+
     chip.v[1] = 0x12;
     chip.v[2] = 0x12;
 
@@ -333,7 +332,7 @@ fn srne_test_neq() {
     let (mut chip, handler) = prepare(0x9120);
 
     chip.program_counter.set(12);
-    
+
     chip.v[1] = 0x12;
     chip.v[2] = 0x13;
 
