@@ -12,13 +12,17 @@ pub type Memory = [u8; 4096];
 pub type Stack = [u16; 16];
 
 use cursive::theme::{BaseColor, Color, PaletteColor};
-use cursive::views::Canvas;
+use cursive::views::IdView;
 use cursive::Cursive;
 use cursive::XY;
+use cursive::event::Event;
+
 
 use screen::screen_view::*;
 
+
 fn main() {
+    use cursive::views::ViewRef;
     let mut siv = Cursive::default();
 
     let mut current_theme = siv.current_theme().clone();
@@ -26,11 +30,24 @@ fn main() {
 
     siv.set_theme(current_theme);
 
-    siv.add_layer(ScreenView {
-        line_position: XY::new(14, 14)
-    });
+    let mut view = ScreenView {
+        line_position: XY::new(1, 14),
+    };
+
+    siv.add_layer(IdView::new("tester", view));
 
     siv.run();
+
+    for i in 2..23 {
+        let pos = XY::new(i, 14);
+
+        let mut view: ViewRef<ScreenView> = siv.find_id("tester").unwrap();
+
+        view.line_position = pos;
+        siv.refresh();
+
+        std::thread::sleep(std::time::Duration::from_secs(1));
+    }
 
     // let bytecode = vec![
     //     // simple program: print line, then beep
