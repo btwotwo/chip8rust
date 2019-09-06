@@ -229,6 +229,17 @@ impl OpcodeHandler {
 
         chip.v[(self.current, Position::X)] = random & nn;
     }
+
+    ///`DXYN` - Display `N`-byte sprite, starting at I, at (V[`X`], V[`Y`]), set V[F] if collision occured
+    fn print(&self, chip: &mut Chip) {
+        let x = chip.v[(self.current, Position::X)];
+        let y = chip.v[(self.current, Position::Y)];
+
+        let n = self.current & 0x000F;
+        let sprites = chip.memory[(chip.i as usize) .. n as usize].to_vec();
+        
+        chip.v[0xF] = chip.screen.draw(x, y, &sprites) as u8;
+    }
 }
 
 #[cfg(test)]

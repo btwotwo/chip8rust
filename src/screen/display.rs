@@ -113,7 +113,8 @@ const FONT: [u8; 80] = [
 0xF0,0x80,0xF0,0x80,0x80
 ];
 
-struct Display {
+#[derive(Debug)]
+pub struct Display {
     contents: [Row; 32]
 }
 
@@ -156,5 +157,56 @@ impl Display {
         }
 
         collision
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn does_not_set_collision() {
+        let mut disp = Display::new();
+
+        disp.contents[0] = 0b_00001111;
+        let sprite = vec![
+            0b_11110000
+        ];
+
+        let col = disp.draw(0, 0, &sprite);
+
+        assert_eq!(col, false);
+    }
+
+    #[test]
+    fn sets_collision() {
+        let mut disp = Display::new();
+
+        disp.contents[0] = 0b_00001111;
+        let sprite = vec![
+            0b_0000_1001
+        ];
+
+        let col = disp.draw(0, 0, &sprite);
+
+        assert_eq!(col, true);
+    }
+
+    #[test]
+    fn y_moves_to_the_other_side() {
+        let mut disp = Display::new();
+
+        disp.contents[31] = 0b_0000_0000;
+
+        let sprite = vec![
+            0b0000_1111,
+            0b0000_1111
+        ];
+
+        disp.draw(0, 31, &sprite);
+
+        println!("{:?}", disp);
+        assert_eq!(disp.contents[0], 0b0000_1111);
+
     }
 }
