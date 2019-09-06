@@ -1,1 +1,1 @@
-pub mod screen_view;
+pub mod display;

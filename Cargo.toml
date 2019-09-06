@@ -6,4 +6,5 @@ edition = "2018"
 
 [dependencies]
 rand = "0.7.0"
-cursive = "0.13"
+tui = {version ="0.6.2", features = ["crossterm"]}
+crossterm = "^0.10"
