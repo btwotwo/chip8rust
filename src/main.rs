@@ -5,7 +5,7 @@ mod registers;
 mod screen;
 mod keyboard;
 
-use opcode::Opcode;
+use opcode::{Opcode, OpcodeHandler};
 use program_counter::ProgramCounter;
 use registers::Registers;
 
@@ -50,7 +50,7 @@ pub struct Chip {
     pub stack: Stack,
     pub stack_pointer: u8,
 
-    pub keyboard: Keyboard
+    pub keyboard: Keyboard,
 }
 
 impl Chip {
@@ -69,7 +69,7 @@ impl Chip {
             sound_timer: 0,
 
             stack_pointer: 0,
-            keyboard: Keyboard::new()
+            keyboard: Keyboard::new(),
         }
     }
 
@@ -79,23 +79,28 @@ impl Chip {
         }
     }
 
-    pub fn start(self) {
-        loop {}
+    pub fn start(mut self) {
+        loop {
+            self.tick()
+        }
     }
 
-    fn emulate_cycle(&mut self) {
+    fn tick(&mut self) {
+        //get and decode opcode
+        let opcode = self.decode_opcode();
 
-        //get opcode
-        //decode opcode
         //execute opcode
-        //update timers
+        OpcodeHandler::next(opcode, self);
 
+
+        //update timers
+        self.delay_timer += 1;
     }
 
-    fn set_opcode(&mut self) {
-        let memory_pointer = self.program_counter.get() as usize;
-        let first_byte = u16::from(self.memory[memory_pointer]);
-        let second_byte = u16::from(self.memory[memory_pointer + 1]);
-        // self.current_opcode = first_byte << 8 | second_byte
+    fn decode_opcode(&self) -> Opcode {
+        let program_counter = self.program_counter.get() as usize;
+        let first_byte = u16::from(self.memory[program_counter]);
+        let second_byte = u16::from(self.memory[program_counter + 1]);
+        first_byte << 8 | second_byte
     }
 }

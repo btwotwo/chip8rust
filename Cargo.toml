@@ -8,3 +8,4 @@ edition = "2018"
 rand = "0.7.0"
 tui = {version ="0.6.2", features = ["crossterm"]}
 crossterm = "^0.10"
+lazy_static = "1.4.0"
