@@ -240,6 +240,19 @@ impl OpcodeHandler {
         
         chip.v[0xF] = chip.screen.draw(x, y, &sprites) as u8;
     }
+
+    fn skp(&self, chip: &mut Chip) {
+        
+    }
+
+    // fn bcd(&self, chip: &mut Chip) {
+    //     let vx_val = chip.v[(self.current, Position::X)];
+    //     let onemial = vx_val % 10;
+    //     let decimal: u8 = (vx_val / 10) % 10;
+    //     let hundred: u8 = (vx_val / 100) % 10;
+
+
+    // }
 }
 
 #[cfg(test)]

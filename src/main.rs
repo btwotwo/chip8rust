@@ -3,10 +3,13 @@ mod opcode;
 mod program_counter;
 mod registers;
 mod screen;
+mod keyboard;
 
 use opcode::Opcode;
 use program_counter::ProgramCounter;
 use registers::Registers;
+
+use keyboard::Keyboard;
 
 pub type Memory = [u8; 4096];
 pub type Stack = [u16; 16];
@@ -46,6 +49,8 @@ pub struct Chip {
 
     pub stack: Stack,
     pub stack_pointer: u8,
+
+    pub keyboard: Keyboard
 }
 
 impl Chip {
@@ -64,6 +69,7 @@ impl Chip {
             sound_timer: 0,
 
             stack_pointer: 0,
+            keyboard: Keyboard::new()
         }
     }
 
