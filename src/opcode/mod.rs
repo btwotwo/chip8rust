@@ -22,63 +22,32 @@ type OpcodeImpl = fn(Opcode, &mut Chip);
 
 lazy_static! {
     pub static ref OPCODE_MAP: HashMap<Opcode, OpcodeImpl> = opcode_func_map!(
-            0x00EE => OpcodeHandler::ret,
-            0x1000 => OpcodeHandler::jp,
-            0x2000 => OpcodeHandler::call,
-            0x3000 => OpcodeHandler::se,
-            0x4000 => OpcodeHandler::sne,
-            0x5000 => OpcodeHandler::sre,
-            0x6000 => OpcodeHandler::ld,
-            0x7000 => OpcodeHandler::add,
-            0x8000 => OpcodeHandler::ldr,
-            0x8001 => OpcodeHandler::or,
-            0x8002 => OpcodeHandler::and,
-            0x8003 => OpcodeHandler::xor,
-            0x8004 => OpcodeHandler::addreg,
-            0x8005 => OpcodeHandler::subreg,
-            0x8006 => OpcodeHandler::shiftr,
-            0x8007 => OpcodeHandler::sub,
-            0x800E => OpcodeHandler::shiftl,
-            0x9000 => OpcodeHandler::srne,
-            0xA000 => OpcodeHandler::ldi,
-            0xB000 => OpcodeHandler::jmpv0
-        );
+        0x00EE => OpcodeHandler::ret,
+        0x1000 => OpcodeHandler::jp,
+        0x2000 => OpcodeHandler::call,
+        0x3000 => OpcodeHandler::se,
+        0x4000 => OpcodeHandler::sne,
+        0x5000 => OpcodeHandler::sre,
+        0x6000 => OpcodeHandler::ld,
+        0x7000 => OpcodeHandler::add,
+        0x8000 => OpcodeHandler::ldr,
+        0x8001 => OpcodeHandler::or,
+        0x8002 => OpcodeHandler::and,
+        0x8003 => OpcodeHandler::xor,
+        0x8004 => OpcodeHandler::addreg,
+        0x8005 => OpcodeHandler::subreg,
+        0x8006 => OpcodeHandler::shiftr,
+        0x8007 => OpcodeHandler::sub,
+        0x800E => OpcodeHandler::shiftl,
+        0x9000 => OpcodeHandler::srne,
+        0xA000 => OpcodeHandler::ldi,
+        0xB000 => OpcodeHandler::jmpv0
+    );
 }
 
-pub struct OpcodeHandler {
-    opcode_map: HashMap<Opcode, OpcodeImpl>,
-}
+pub struct OpcodeHandler;
 
 impl OpcodeHandler {
-    pub fn new() -> OpcodeHandler {
-        let map = opcode_func_map!(
-            0x00EE => OpcodeHandler::ret,
-            0x1000 => OpcodeHandler::jp,
-            0x2000 => OpcodeHandler::call,
-            0x3000 => OpcodeHandler::se,
-            0x4000 => OpcodeHandler::sne,
-            0x5000 => OpcodeHandler::sre,
-            0x6000 => OpcodeHandler::ld,
-            0x7000 => OpcodeHandler::add,
-            0x8000 => OpcodeHandler::ldr,
-            0x8001 => OpcodeHandler::or,
-            0x8002 => OpcodeHandler::and,
-            0x8003 => OpcodeHandler::xor,
-            0x8004 => OpcodeHandler::addreg,
-            0x8005 => OpcodeHandler::subreg,
-            0x8006 => OpcodeHandler::shiftr,
-            0x8007 => OpcodeHandler::sub,
-            0x800E => OpcodeHandler::shiftl,
-            0x9000 => OpcodeHandler::srne,
-            0xA000 => OpcodeHandler::ldi,
-            0xB000 => OpcodeHandler::jmpv0
-        );
-
-        OpcodeHandler {
-            opcode_map: map,
-        }
-    }
-
     pub fn next(opcode: Opcode, chip: &mut Chip) {
         let normalized_opcode = opcode & 0xF000;
         let normalized_opcode = match normalized_opcode {
@@ -194,8 +163,8 @@ impl OpcodeHandler {
 
     ///`8XY5` - Subtract V[`Y`] from V[`X`], change carry flag if there's a borrow
     fn subreg(opcode: Opcode, chip: &mut Chip) {
-        let (result, carried) = chip.v[(opcode, Position::X)]
-            .overflowing_sub(chip.v[(opcode, Position::Y)]);
+        let (result, carried) =
+            chip.v[(opcode, Position::X)].overflowing_sub(chip.v[(opcode, Position::Y)]);
 
         chip.v[(opcode, Position::X)] = result;
         chip.v.set_carry(carried);
@@ -260,21 +229,18 @@ impl OpcodeHandler {
         let y = chip.v[(opcode, Position::Y)];
 
         let n = opcode & 0x000F;
-        let sprites = chip.memory[(chip.i as usize) .. n as usize].to_vec();
-        
+        let sprites = chip.memory[(chip.i as usize)..n as usize].to_vec();
+
         chip.v[0xF] = chip.screen.draw(x, y, &sprites) as u8;
     }
 
-    fn skp(opcode: Opcode, chip: &mut Chip) {
-        
-    }
+    fn skp(opcode: Opcode, chip: &mut Chip) {}
 
     // fn bcd(&self, chip: &mut Chip) {
     //     let vx_val = chip.v[(opcode, Position::X)];
     //     let onemial = vx_val % 10;
     //     let decimal: u8 = (vx_val / 10) % 10;
     //     let hundred: u8 = (vx_val / 100) % 10;
-
 
     // }
 }

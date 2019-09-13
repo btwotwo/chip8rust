@@ -1,21 +1,17 @@
 use super::*;
 
-fn prepare(opcode: Opcode) -> (Chip, OpcodeHandler) {
-    let mut handler = OpcodeHandler::new();
-
-    handler.current = opcode;
-
-    (Chip::new(), handler)
+fn prepare() -> Chip {
+    Chip::new()
 }
 
 #[test]
 fn ret_test() {
-    let (mut chip, handler) = prepare(0x00EE);
+    let mut chip = prepare();
 
     chip.stack_pointer = 10;
     chip.stack[chip.stack_pointer as usize] = 0x1234;
 
-    handler.ret(&mut chip);
+    OpcodeHandler::ret(0x00EE, &mut chip);
 
     assert_eq!(chip.program_counter, 0x1234);
     assert_eq!(chip.stack_pointer, 9);
@@ -23,22 +19,22 @@ fn ret_test() {
 
 #[test]
 fn jp_test() {
-    let (mut chip, handler) = prepare(0x1DEA);
+    let mut chip = prepare();
     chip.program_counter.set(0xABC);
 
-    handler.jp(&mut chip);
+    OpcodeHandler::jp(0x1DEA, &mut chip);
 
     assert_eq!(chip.program_counter, 0xDEA)
 }
 
 #[test]
 fn call_test() {
-    let (mut chip, handler) = prepare(0x2DEA);
+    let mut chip = prepare();
     chip.program_counter.set(12);
 
     let opcode = 0x2DEA;
 
-    handler.call(&mut chip);
+    OpcodeHandler::call(0x2DEA, &mut chip);
 
     assert_eq!(chip.program_counter, 0xDEA);
     assert_eq!(chip.stack_pointer, 1);
@@ -47,141 +43,141 @@ fn call_test() {
 
 #[test]
 fn se_test_neq() {
-    let (mut chip, handler) = prepare(0x3512);
+    let mut chip = prepare();
     chip.program_counter.set(12);
     chip.v[5] = 0x10;
 
-    handler.se(&mut chip);
+    OpcodeHandler::se(0x3512, &mut chip);
 
     assert_eq!(chip.program_counter, 12);
 }
 
 #[test]
 fn se_test_eq() {
-    let (mut chip, handler) = prepare(0x3412);
+    let mut chip = prepare();
     chip.program_counter.set(12);
     chip.v[4] = 0x12;
 
-    handler.se(&mut chip);
+    OpcodeHandler::se(0x3412, &mut chip);
 
     assert_eq!(chip.program_counter, 14);
 }
 
 #[test]
 fn sne_test_eq() {
-    let (mut chip, handler) = prepare(0x4412);
+    let mut chip = prepare();
     chip.program_counter.set(12);
     chip.v[4] = 0x12;
 
-    handler.sne(&mut chip);
+    OpcodeHandler::sne(0x4412, &mut chip);
 
     assert_eq!(chip.program_counter, 12);
 }
 
 #[test]
 fn sne_test_neq() {
-    let (mut chip, handler) = prepare(0x4412);
+    let mut chip = prepare();
 
     chip.program_counter.set(12);
 
     chip.v[4] = 0x13;
 
-    handler.sne(&mut chip);
+    OpcodeHandler::sne(0x4412, &mut chip);
 
     assert_eq!(chip.program_counter, 14);
 }
 
 #[test]
 fn sre_test() {
-    let (mut chip, handler) = prepare(0x5460);
+    let mut chip = prepare();
 
     chip.program_counter.set(12);
 
     chip.v[5] = 0x12;
     chip.v[6] = 0x13;
 
-    handler.sre(&mut chip);
+    OpcodeHandler::sre(0x5460, &mut chip);
 
     assert_eq!(chip.program_counter, 12)
 }
 
 #[test]
 fn sre_test_eq() {
-    let (mut chip, handler) = prepare(0x5450);
+    let mut chip = prepare();
 
     chip.program_counter.set(12);
 
     chip.v[4] = 0x12;
     chip.v[5] = 0x12;
 
-    handler.sre(&mut chip);
+    OpcodeHandler::sre(0x5450, &mut chip);
 
     assert_eq!(chip.program_counter, 14);
 }
 
 #[test]
 fn ld_test() {
-    let (mut chip, handler) = prepare(0x6EAB);
+    let mut chip = prepare();
 
     chip.v[0xE] = 0xAB;
 
-    handler.ld(&mut chip);
+    OpcodeHandler::ld(0x6EAB, &mut chip);
 
     assert_eq!(chip.v[0xE], 0xAB);
 }
 
 #[test]
 fn add_test() {
-    let (mut chip, handler) = prepare(0x75AB);
+    let mut chip = prepare();
 
     chip.v[0x5] = 0x1;
 
-    handler.add(&mut chip);
+    OpcodeHandler::add(0x75AB, &mut chip);
 
     assert_eq!(chip.v[0x5], 0xAC);
 }
 
 #[test]
 fn add_overflow_test() {
-    let (mut chip, handler) = prepare(0x7502);
+    let mut chip = prepare();
 
     chip.v[0x5] = 0xFF;
 
-    handler.add(&mut chip);
+    OpcodeHandler::add(0x7502, &mut chip);
 
     assert_eq!(chip.v[0x5], 0x1);
 }
 
 #[test]
 fn ldr_test() {
-    let (mut chip, handler) = prepare(0x8120);
+    let mut chip = prepare();
     chip.v[1] = 111;
     chip.v[2] = 222;
 
-    handler.ldr(&mut chip);
+    OpcodeHandler::ldr(0x8120, &mut chip);
 
     assert_eq!(chip.v[1], 222);
 }
 
 #[test]
 fn or_test() {
-    let (mut chip, handler) = prepare(0x8121);
+    let mut chip = prepare();
     chip.v[1] = 0x12;
     chip.v[2] = 0x34;
 
-    handler.or(&mut chip);
+    OpcodeHandler::or(0x8121, &mut chip);
     assert_eq!(chip.v[1], 0x36);
     assert_eq!(chip.v[2], 0x34);
 }
 
 #[test]
 fn and_test() {
-    let (mut chip, handler) = prepare(0x8122);
+    let mut chip = prepare();
 
     chip.v[1] = 0x12;
     chip.v[2] = 0x34;
 
-    handler.and(&mut chip);
+    OpcodeHandler::and(0x8122, &mut chip);
 
     assert_eq!(chip.v[1], 0x10);
     assert_eq!(chip.v[2], 0x34);
@@ -189,12 +185,12 @@ fn and_test() {
 
 #[test]
 fn xor_test() {
-    let (mut chip, handler) = prepare(0x8123);
+    let mut chip = prepare();
 
     chip.v[1] = 0x12;
     chip.v[2] = 0x34;
 
-    handler.xor(&mut chip);
+    OpcodeHandler::xor(0x8123, &mut chip);
 
     assert_eq!(chip.v[1], 0x26);
     assert_eq!(chip.v[2], 0x34);
@@ -202,13 +198,13 @@ fn xor_test() {
 
 #[test]
 fn addreg_test() {
-    let (mut chip, handler) = prepare(0x8014);
+    let mut chip = prepare();
 
     chip.v[0] = 0x20;
     chip.v[1] = 0x01;
     chip.v[0xF] = 1;
 
-    handler.addreg(&mut chip);
+    OpcodeHandler::addreg(0x8014, &mut chip);
 
     assert_eq!(chip.v[0], 0x21);
     assert_eq!(chip.v[1], 0x01);
@@ -217,13 +213,13 @@ fn addreg_test() {
 
 #[test]
 fn addreg_carry_test() {
-    let (mut chip, handler) = prepare(0x8014);
+    let mut chip = prepare();
 
     chip.v[0] = 0xFF;
     chip.v[1] = 0x02;
     chip.v[0xF] = 0;
 
-    handler.addreg(&mut chip);
+    OpcodeHandler::addreg(0x8014, &mut chip);
 
     assert_eq!(chip.v[0], 0x01);
     assert_eq!(chip.v[1], 0x02);
@@ -232,13 +228,13 @@ fn addreg_carry_test() {
 
 #[test]
 fn subreg_test() {
-    let (mut chip, handler) = prepare(0x8015);
+    let mut chip = prepare();
 
     chip.v[0] = 0x20;
     chip.v[1] = 0x01;
     chip.v[0xF] = 1;
 
-    handler.subreg(&mut chip);
+    OpcodeHandler::subreg(0x8015, &mut chip);
 
     assert_eq!(chip.v[0], 0x1F);
     assert_eq!(chip.v[1], 0x01);
@@ -247,13 +243,13 @@ fn subreg_test() {
 
 #[test]
 fn subreg_carry_test() {
-    let (mut chip, handler) = prepare(0x8015);
+    let mut chip = prepare();
 
     chip.v[0] = 0x00;
     chip.v[1] = 0x01;
     chip.v[0xF] = 0;
 
-    handler.subreg(&mut chip);
+    OpcodeHandler::subreg(0x8015, &mut chip);
 
     assert_eq!(chip.v[0], 0xFF);
     assert_eq!(chip.v[1], 0x01);
@@ -262,12 +258,12 @@ fn subreg_carry_test() {
 
 #[test]
 fn shiftr_test() {
-    let (mut chip, handler) = prepare(0x8016);
+    let mut chip = prepare();
 
     chip.v[0] = 0x10;
     chip.v[0xF] = 1;
 
-    handler.shiftr(&mut chip);
+    OpcodeHandler::shiftr(0x8016, &mut chip);
 
     assert_eq!(chip.v[0], 0x8);
     assert_eq!(chip.v[0xF], 0);
@@ -275,13 +271,13 @@ fn shiftr_test() {
 
 #[test]
 fn sub_test() {
-    let (mut chip, handler) = prepare(0x8107);
+    let mut chip = prepare();
 
     chip.v[0] = 0;
     chip.v[1] = 1;
     chip.v[0xF] = 1;
 
-    handler.sub(&mut chip);
+    OpcodeHandler::sub(0x8107, &mut chip);
 
     assert_eq!(chip.v[1], 255);
     assert_eq!(chip.v[0xF], 1);
@@ -289,13 +285,13 @@ fn sub_test() {
 
 #[test]
 fn sub_test_overflow() {
-    let (mut chip, handler) = prepare(0x8017);
+    let mut chip = prepare();
 
     chip.v[0] = 0;
     chip.v[1] = 1;
     chip.v[0xF] = 1;
 
-    handler.sub(&mut chip);
+    OpcodeHandler::sub(0x8017, &mut chip);
 
     assert_eq!(chip.v[0], 1);
     assert_eq!(chip.v[0xF], 0);
@@ -303,11 +299,11 @@ fn sub_test_overflow() {
 
 #[test]
 fn shiftl_test_significant_one() {
-    let (mut chip, handler) = prepare(0x801E);
+    let mut chip = prepare();
     chip.v[0] = 0b100_0100_1;
     chip.v[0xf] = 0;
 
-    handler.shiftl(&mut chip);
+    OpcodeHandler::shiftl(0x801E, &mut chip);
 
     assert_eq!(chip.v[0], 0b0001_001_0);
     assert_eq!(chip.v[0xf], 1);
@@ -315,39 +311,39 @@ fn shiftl_test_significant_one() {
 
 #[test]
 fn srne_test_eq() {
-    let (mut chip, handler) = prepare(0x9120);
+    let mut chip = prepare();
 
     chip.program_counter.set(12);
 
     chip.v[1] = 0x12;
     chip.v[2] = 0x12;
 
-    handler.srne(&mut chip);
+    OpcodeHandler::srne(0x9120, &mut chip);
 
     assert_eq!(chip.program_counter, 12);
 }
 
 #[test]
 fn srne_test_neq() {
-    let (mut chip, handler) = prepare(0x9120);
+    let mut chip = prepare();
 
     chip.program_counter.set(12);
 
     chip.v[1] = 0x12;
     chip.v[2] = 0x13;
 
-    handler.srne(&mut chip);
+    OpcodeHandler::srne(0x9120, &mut chip);
 
     assert_eq!(chip.program_counter, 14);
 }
 
 #[test]
 fn jmpv0_test() {
-    let (mut chip, handler) = prepare(0xA123);
+    let mut chip = prepare();
     chip.v[0] = 0x0002;
     chip.program_counter.set(0x1);
 
-    handler.jmpv0(&mut chip);
+    OpcodeHandler::jmpv0(0xA123, &mut chip);
 
     assert_eq!(chip.program_counter, 0x0125)
 }
