@@ -15,7 +15,7 @@ macro_rules! key_map {
 
 pub struct Keyboard {
     keys: [bool; 0xF],
-    mapping: HashMap<KeyEvent, u8>
+    mapping: HashMap<KeyEvent, u8>,
 }
 
 impl Keyboard {
@@ -39,7 +39,7 @@ impl Keyboard {
                 'x' => 0,
                 'c' => 0xB,
                 'v' => 0xF
-            )
+            ),
         }
     }
 

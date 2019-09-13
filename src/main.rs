@@ -1,9 +1,9 @@
 mod display;
+mod keyboard;
 mod opcode;
 mod program_counter;
 mod registers;
 mod screen;
-mod keyboard;
 
 use opcode::{Opcode, OpcodeHandler};
 use program_counter::ProgramCounter;
@@ -91,7 +91,6 @@ impl Chip {
 
         //execute opcode
         OpcodeHandler::next(opcode, self);
-
 
         //update timers
         self.delay_timer += 1;

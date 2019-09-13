@@ -1,6 +1,7 @@
 type Row = u64;
 type Font = [u8; 80];
 
+#[rustfmt::skip]
 // credits to the http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#dispcoords
 const FONT: [u8; 80] = [
 // ****
@@ -115,14 +116,12 @@ const FONT: [u8; 80] = [
 
 #[derive(Debug)]
 pub struct Display {
-    contents: [Row; 32]
+    contents: [Row; 32],
 }
 
 impl Display {
-    pub fn new() -> Self{
-        Display {
-            contents: [0; 32]
-        }
+    pub fn new() -> Self {
+        Display { contents: [0; 32] }
     }
 
     pub fn get_font() -> Font {
@@ -137,7 +136,7 @@ impl Display {
             let row = self.contents[row_idx];
             let part = u64::from(*part);
             let part = part.rotate_right(x.into());
-            
+
             for pixel_idx in 0..64 {
                 if collision {
                     break;
@@ -169,9 +168,7 @@ mod tests {
         let mut disp = Display::new();
 
         disp.contents[0] = 0b_00001111;
-        let sprite = vec![
-            0b_11110000
-        ];
+        let sprite = vec![0b_11110000];
 
         let col = disp.draw(0, 0, &sprite);
 
@@ -183,9 +180,7 @@ mod tests {
         let mut disp = Display::new();
 
         disp.contents[0] = 0b_00001111;
-        let sprite = vec![
-            0b_0000_1001
-        ];
+        let sprite = vec![0b_0000_1001];
 
         let col = disp.draw(0, 0, &sprite);
 
@@ -198,15 +193,11 @@ mod tests {
 
         disp.contents[31] = 0b_0000_0000;
 
-        let sprite = vec![
-            0b0000_1111,
-            0b0000_1111
-        ];
+        let sprite = vec![0b0000_1111, 0b0000_1111];
 
         disp.draw(0, 31, &sprite);
 
         println!("{:?}", disp);
         assert_eq!(disp.contents[0], 0b0000_1111);
-
     }
 }
