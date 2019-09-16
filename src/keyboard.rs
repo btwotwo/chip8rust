@@ -47,7 +47,7 @@ impl Keyboard {
         self.keys[index as usize] = state;
     }
 
-    pub fn get_state(&self, index: u8) -> bool {
+    pub fn is_pressed(&self, index: u8) -> bool {
         self.keys[index as usize]
     }
 

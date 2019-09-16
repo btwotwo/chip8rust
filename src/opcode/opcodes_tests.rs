@@ -347,3 +347,30 @@ fn jmpv0_test() {
 
     assert_eq!(chip.program_counter, 0x0125)
 }
+
+
+#[test]
+fn skp_test() {
+    let mut chip = prepare();
+
+    chip.v[1] = 0x1;
+    chip.keyboard.set_state(1, true);
+    chip.program_counter.set(2);
+
+    OpcodeHandler::skp(0xE19E, &mut chip);
+
+    assert_eq!(chip.program_counter, 4);
+}
+
+#[test]
+fn sknp_test() {
+    let mut chip = prepare();
+
+    chip.v[1] = 0x1;
+    chip.keyboard.set_state(1, false);
+    chip.program_counter.set(2);
+
+    OpcodeHandler::sknp(0xE1A1, &mut chip);
+
+    assert_eq!(chip.program_counter, 4);
+}

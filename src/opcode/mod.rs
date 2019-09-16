@@ -233,8 +233,26 @@ impl OpcodeHandler {
 
         chip.v[0xF] = chip.screen.draw(x, y, &sprites) as u8;
     }
+    
+    ///`EX9E` - Skip the next instruction if the V[`X`] key is pressed.
+    fn skp(opcode: Opcode, chip: &mut Chip) {
+        let x = chip.v[(opcode, Position::X)];
 
-    fn skp(opcode: Opcode, chip: &mut Chip) {}
+        if chip.keyboard.is_pressed(x) {
+            chip.program_counter.increment();
+        }
+    }
+
+    ///`EXA1` - Skip the next instruction if the V[`X`] key is not pressed.
+    fn sknp(opcode: Opcode, chip: &mut Chip) {
+        let x = chip.v[(opcode, Position::X)];
+
+        if !chip.keyboard.is_pressed(x) {
+            chip.program_counter.increment();
+        }
+    }
+
+
 
     // fn bcd(&self, chip: &mut Chip) {
     //     let vx_val = chip.v[(opcode, Position::X)];
