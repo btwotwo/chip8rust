@@ -3,7 +3,7 @@ type Font = [u8; 80];
 
 #[rustfmt::skip]
 // credits to the http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#dispcoords
-const FONT: [u8; 80] = [
+pub const FONT: [u8; 80] = [
 // ****
 // *  *
 // *  *
@@ -122,10 +122,6 @@ pub struct Display {
 impl Display {
     pub fn new() -> Self {
         Display { contents: [0; 32] }
-    }
-
-    pub fn get_font() -> Font {
-        FONT
     }
 
     pub fn draw(&mut self, x: u8, y: u8, sprites: &[u8]) -> bool {

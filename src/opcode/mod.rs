@@ -41,7 +41,20 @@ lazy_static! {
         0x800E => OpcodeHandler::shiftl,
         0x9000 => OpcodeHandler::srne,
         0xA000 => OpcodeHandler::ldi,
-        0xB000 => OpcodeHandler::jmpv0
+        0xB000 => OpcodeHandler::jmpv0,
+        0xC000 => OpcodeHandler::rand,
+        0xD000 => OpcodeHandler::print,
+        0xE09E => OpcodeHandler::skp,
+        0xE0A1 => OpcodeHandler::sknp,
+        0xF007 => OpcodeHandler::ldvxdt,
+        0xF00A => OpcodeHandler::ldvxkey,
+        0xF015 => OpcodeHandler::lddtvx,
+        0xF018 => OpcodeHandler::ldstvs,
+        0xF01E => OpcodeHandler::addivx,
+        0xF029 => OpcodeHandler::ldfvx,
+        0xF033 => OpcodeHandler::bcd,
+        0xF055 => OpcodeHandler::ldiv0vx,
+        0xF065 => OpcodeHandler::ldv0vxi
     );
 }
 
@@ -252,15 +265,64 @@ impl OpcodeHandler {
         }
     }
 
+    ///`FX07` - Set V[`X`] equal to delay timer.
+    fn ldvxdt(opcode: Opcode, chip: &mut Chip) {
+        chip.v[(opcode, Position::X)] = chip.delay_timer;
+    }
+
+    ///`FX0A` - Wait for a key press, store the value of the key in V[`X`]
+    fn ldvxkey(opcode: Opcode, chip: &mut Chip) {
+        let key = chip.keyboard.wait_for_key();
+
+        chip.v[(opcode, Position::X)] = key;
+    }
+
+    ///`FX15` - Set delay timer equal to V[`X`]
+    fn lddtvx(opcode: Opcode, chip: &mut Chip) {
+        chip.delay_timer = chip.v[(opcode, Position::X)];
+    }
+
+    ///`FX18` - Set sound timer equal to V[`X`]
+    fn ldstvs(opcode: Opcode, chip: &mut Chip) {
+        chip.sound_timer = chip.v[(opcode, Position::X)];
+    }
+
+    ///`FX1E` - Set I equal to V[`X`] + I
+    fn addivx(opcode: Opcode, chip: &mut Chip) {
+        chip.i = chip.i + chip.v[(opcode, Position::X)] as u16;
+    }
 
 
-    // fn bcd(&self, chip: &mut Chip) {
-    //     let vx_val = chip.v[(opcode, Position::X)];
-    //     let onemial = vx_val % 10;
-    //     let decimal: u8 = (vx_val / 10) % 10;
-    //     let hundred: u8 = (vx_val / 100) % 10;
+    ///`FX29` - Set I equal to sprite location for digit V[`X`]
+    fn ldfvx(opcode: Opcode, chip: &mut Chip) {
+        chip.i = 5 * chip.v[(opcode, Position::X)]
+    }
 
-    // }
+    ///`FX33` - Store BCD representation of V[`X`] to I, I+1, I+2
+    fn bcd(&self, chip: &mut Chip) {
+        let vx_val = chip.v[(opcode, Position::X)];
+        let onemial = vx_val % 10;
+        let decimal: u8 = (vx_val / 10) % 10;
+        let hundred: u8 = (vx_val / 100) % 10;
+
+        chip.memory[chip.i] = hundred;
+        chip.memory[chip.i + 1] = decimal;
+        chip.memory[chip.i + 2] = onemial;
+    }
+
+    ///`FX55` - Store registers V0 through V[`X`] in memory starting at location I.`
+    fn ldiv0vx(&self, chip: &mut Chip) {
+        for idx 0..Registers::get_index(opcode, Position::X) {
+            chip.memory[i + idx] = chip.v[idx];
+        }
+    }
+
+    ///`FX65` - Read registers V0 through V[`X`] from memory starting at location I.
+    fn ldv0vxi(&self, chip: &mut Chip) {
+        for idx 0..Registers::get_index(opcode, Position::X) {
+            chip.v[idx] = chip.memory[i + idx];
+        }
+    }
 }
 
 #[cfg(test)]
