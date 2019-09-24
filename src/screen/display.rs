@@ -1,4 +1,3 @@
-type Row = u64;
 type Font = [u8; 80];
 
 #[rustfmt::skip]
@@ -114,9 +113,10 @@ pub const FONT: Font = [
 0xF0,0x80,0xF0,0x80,0x80
 ];
 
+type Row = u64;
 #[derive(Debug)]
 pub struct Display {
-    contents: [Row; 32],
+    pub contents: [Row; 32],
 }
 
 impl Display {
@@ -133,7 +133,7 @@ impl Display {
             let part = u64::from(*part);
             let part = part.rotate_right(x.into());
 
-            for pixel_idx in 0..64 {
+            for pixel_idx in 0..63 {
                 if collision {
                     break;
                 }

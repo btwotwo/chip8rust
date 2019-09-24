@@ -9,6 +9,10 @@ use program_counter::ProgramCounter;
 use registers::Registers;
 
 use keyboard::Keyboard;
+use crossterm::{
+    execute, input, style, AsyncReader, Clear, ClearType, Color, Crossterm, Goto, InputEvent,
+    KeyEvent, PrintStyledFont, RawScreen, Result, Show,
+};
 
 pub type Memory = [u8; 4096];
 pub type Stack = [u16; 16];
@@ -16,6 +20,21 @@ pub type Stack = [u16; 16];
 use screen::display::*;
 
 fn main() {
+    let mut display = Display::new();
+    let mut crossterm = Crossterm::new();
+    let _raw = RawScreen::into_raw_mode().unwrap();
+    crossterm.cursor().hide().unwrap();
+
+    let keyboard = keyboard::Keyboard::new();
+
+    loop {
+        display.contents = [0; 32];
+        let inp = keyboard.wait_for_key();
+        let symbol = &FONT[(inp * 5) as usize..(inp * 5 + 5) as usize];
+        display.draw(10, 15, symbol);
+        screen::screen::redraw(&display, &mut crossterm.terminal());
+    }
+
     // let bytecode = vec![
     //     // simple program: print line, then beep
     //     0x00, 0xE0, // clear screen
