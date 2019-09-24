@@ -1,4 +1,3 @@
-mod display;
 mod keyboard;
 mod opcode;
 mod program_counter;

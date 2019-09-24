@@ -246,7 +246,7 @@ impl OpcodeHandler {
 
         chip.v[0xF] = chip.screen.draw(x, y, &sprites) as u8;
     }
-    
+
     ///`EX9E` - Skip the next instruction if the V[`X`] key is pressed.
     fn skp(opcode: Opcode, chip: &mut Chip) {
         let x = chip.v[(opcode, Position::X)];
@@ -289,38 +289,37 @@ impl OpcodeHandler {
 
     ///`FX1E` - Set I equal to V[`X`] + I
     fn addivx(opcode: Opcode, chip: &mut Chip) {
-        chip.i = chip.i + chip.v[(opcode, Position::X)] as u16;
+        chip.i += u16::from(chip.v[(opcode, Position::X)]);
     }
-
 
     ///`FX29` - Set I equal to sprite location for digit V[`X`]
     fn ldfvx(opcode: Opcode, chip: &mut Chip) {
-        chip.i = 5 * chip.v[(opcode, Position::X)]
+        chip.i = (5 * chip.v[(opcode, Position::X)]).into()
     }
 
     ///`FX33` - Store BCD representation of V[`X`] to I, I+1, I+2
-    fn bcd(&self, chip: &mut Chip) {
+    fn bcd(opcode: Opcode, chip: &mut Chip) {
         let vx_val = chip.v[(opcode, Position::X)];
         let onemial = vx_val % 10;
         let decimal: u8 = (vx_val / 10) % 10;
         let hundred: u8 = (vx_val / 100) % 10;
 
-        chip.memory[chip.i] = hundred;
-        chip.memory[chip.i + 1] = decimal;
-        chip.memory[chip.i + 2] = onemial;
+        chip.memory[chip.i as usize] = hundred;
+        chip.memory[(chip.i + 1) as usize] = decimal;
+        chip.memory[(chip.i + 2) as usize] = onemial;
     }
 
     ///`FX55` - Store registers V0 through V[`X`] in memory starting at location I.`
-    fn ldiv0vx(&self, chip: &mut Chip) {
-        for idx 0..Registers::get_index(opcode, Position::X) {
-            chip.memory[i + idx] = chip.v[idx];
+    fn ldiv0vx(opcode: Opcode, chip: &mut Chip) {
+        for idx in 0..Registers::get_index(opcode, Position::X) {
+            chip.memory[(chip.i + u16::from(idx)) as usize] = chip.v[idx];
         }
     }
 
     ///`FX65` - Read registers V0 through V[`X`] from memory starting at location I.
-    fn ldv0vxi(&self, chip: &mut Chip) {
-        for idx 0..Registers::get_index(opcode, Position::X) {
-            chip.v[idx] = chip.memory[i + idx];
+    fn ldv0vxi(opcode: Opcode, chip: &mut Chip) {
+        for idx in 0..Registers::get_index(opcode, Position::X) {
+            chip.v[idx] = chip.memory[(chip.i + u16::from(idx)) as usize];
         }
     }
 }

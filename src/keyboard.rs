@@ -1,5 +1,5 @@
-use crossterm::{KeyEvent, InputEvent};
 use crossterm::input;
+use crossterm::{InputEvent, KeyEvent};
 use std::collections::HashMap;
 
 macro_rules! key_map {
@@ -62,11 +62,12 @@ impl Keyboard {
     pub fn wait_for_key(&self) -> u8 {
         let input = input();
 
-        *input.read_sync().find_map(|event| {
-            match event {
+        *input
+            .read_sync()
+            .find_map(|event| match event {
                 InputEvent::Keyboard(event) => self.mapping.get(&event),
-                _ => None
-            }
-        }).unwrap()
+                _ => None,
+            })
+            .unwrap()
     }
 }

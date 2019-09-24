@@ -3,7 +3,7 @@ type Font = [u8; 80];
 
 #[rustfmt::skip]
 // credits to the http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#dispcoords
-pub const FONT: [u8; 80] = [
+pub const FONT: Font = [
 // ****
 // *  *
 // *  *

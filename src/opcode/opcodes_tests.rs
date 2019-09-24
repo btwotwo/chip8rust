@@ -348,7 +348,6 @@ fn jmpv0_test() {
     assert_eq!(chip.program_counter, 0x0125)
 }
 
-
 #[test]
 fn skp_test() {
     let mut chip = prepare();
