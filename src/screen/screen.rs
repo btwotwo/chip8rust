@@ -18,7 +18,4 @@ pub fn redraw(display: &Display, term: &mut Crossterm) {
             }
         }
     }
-
-    cursor.goto(77, 87);
-    println!("{:?}", display.contents);
 }
