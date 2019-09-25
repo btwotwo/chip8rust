@@ -15,9 +15,6 @@ pub fn redraw(display: &Display, term: &mut Crossterm) {
             if pxl != 0 {
                 cursor.goto(i, row_idx as u16);
                 println!("{}", pixel);
-
-                cursor.goto(0, 0);
-                println!("x: {}, y: {}", i, row_idx);
             }
         }
     }

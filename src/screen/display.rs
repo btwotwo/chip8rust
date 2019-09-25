@@ -130,8 +130,8 @@ impl Display {
         for (row_idx, part) in sprites.iter().enumerate() {
             let row_idx = (row_idx + (y as usize)) % 32;
             let row = self.contents[row_idx];
-            let part = u64::from(*part);
-            let part = part.rotate_left(x.into());
+            let part = u64::from(*part) << 56;
+            let part = part.rotate_right(x.into());
 
             for pixel_idx in 0..63 {
                 if collision {

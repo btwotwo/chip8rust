@@ -30,9 +30,8 @@ fn main() {
     loop {
         display.contents = [0; 32];
         let inp = keyboard.wait_for_key();
-        // let symbol = &FONT[(inp * 5) as usize..(inp * 5 + 5) as usize];
-        let symbol = &[0b10000000];
-        display.draw(0, 0, symbol);
+        let symbol = &FONT[(inp * 5) as usize..(inp * 5 + 5) as usize];
+        display.draw(0, 62, symbol);
         screen::screen::redraw(&display, &mut crossterm);
     }
 
