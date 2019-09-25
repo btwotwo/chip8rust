@@ -26,13 +26,27 @@ fn main() {
     crossterm.cursor().hide().unwrap();
 
     let keyboard = keyboard::Keyboard::new();
+    let mut x = 0u8;
+    let mut y = 0u8;
 
     loop {
         display.contents = [0; 32];
         let inp = keyboard.wait_for_key();
         let symbol = &FONT[(inp * 5) as usize..(inp * 5 + 5) as usize];
-        display.draw(0, 62, symbol);
+        display.draw(x, y, symbol);
         screen::screen::redraw(&display, &mut crossterm);
+        let input = input();
+
+        match input.read_sync().next().unwrap() { 
+            InputEvent::Keyboard(ev) => match ev {
+                KeyEvent::Down => y = (y + 1) % 32,
+                KeyEvent::Up => y = y.overflowing_sub(1).0 % 32,
+                KeyEvent::Right => x = (x + 1) % 64,
+                KeyEvent::Left => x = x.overflowing_sub(1).0 % 64,
+                _ => continue
+            },
+            _ => continue
+        }
     }
 
     // let bytecode = vec![

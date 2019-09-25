@@ -10,7 +10,7 @@ pub fn redraw(display: &Display, term: &mut Crossterm) {
     for (row_idx, row) in display.contents.iter().enumerate() {
         const MASK: u64 = 0x8000_0000_0000_0000;
 
-        for i in 0..63 {
+        for i in 0..64 {
             let pxl = (MASK >> i) & row;
             if pxl != 0 {
                 cursor.goto(i, row_idx as u16);
@@ -18,4 +18,7 @@ pub fn redraw(display: &Display, term: &mut Crossterm) {
             }
         }
     }
+
+    cursor.goto(77, 87);
+    println!("{:?}", display.contents);
 }
