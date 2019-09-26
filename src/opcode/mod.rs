@@ -1,8 +1,6 @@
 use super::registers::{Position, Registers};
 use super::Chip;
 use std::collections::HashMap;
-
-#[macro_use]
 use lazy_static::{lazy_static};
 
 macro_rules! opcode_func_map {
