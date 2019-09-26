@@ -8,11 +8,11 @@ use opcode::{Opcode, OpcodeHandler};
 use program_counter::ProgramCounter;
 use registers::Registers;
 
-use keyboard::Keyboard;
 use crossterm::{
     execute, input, style, AsyncReader, Clear, ClearType, Color, Crossterm, Goto, InputEvent,
     KeyEvent, PrintStyledFont, RawScreen, Result, Show,
 };
+use keyboard::Keyboard;
 
 pub type Memory = [u8; 4096];
 pub type Stack = [u16; 16];
@@ -28,25 +28,45 @@ fn main() {
     let keyboard = keyboard::Keyboard::new();
     let mut x = 0u8;
     let mut y = 0u8;
+    let mut previous = 1;
 
     loop {
         display.contents = [0; 32];
-        let inp = keyboard.wait_for_key();
-        let symbol = &FONT[(inp * 5) as usize..(inp * 5 + 5) as usize];
-        display.draw(x, y, symbol);
-        screen::screen::redraw(&display, &mut crossterm);
         let input = input();
 
-        match input.read_sync().next().unwrap() { 
-            InputEvent::Keyboard(ev) => match ev {
-                KeyEvent::Down => y = (y + 1) % 32,
-                KeyEvent::Up => y = y.overflowing_sub(1).0 % 32,
-                KeyEvent::Right => x = (x + 1) % 64,
-                KeyEvent::Left => x = x.overflowing_sub(1).0 % 64,
-                _ => continue
+        let input = match input.read_sync().next() {
+            Some(InputEvent::Keyboard(event)) => match event {
+                KeyEvent::Ctrl('c') => std::process::exit(0),
+                KeyEvent::Down => {
+                    y = (y + 1) % 32;
+                    None
+                }
+                KeyEvent::Up => {
+                    y = y.overflowing_sub(1).0 % 32;
+                    None
+                }
+                KeyEvent::Right => {
+                    x = (x + 1) % 64;
+                    None
+                }
+                KeyEvent::Left => {
+                    x = x.overflowing_sub(1).0 % 64;
+                    None
+                }
+                _ => keyboard.mapping.get(&event),
             },
-            _ => continue
-        }
+            _ => None,
+        };
+
+        match input {
+            Some(input) => {
+                previous = *input;
+            }
+            _ => (),
+        };
+        let symbol = &FONT[(previous * 5) as usize..(previous * 5 + 5) as usize];
+        display.draw(x, y, symbol);
+        screen::screen::redraw(&display, &mut crossterm);
     }
 
     // let bytecode = vec![

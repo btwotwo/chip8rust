@@ -1,5 +1,5 @@
 use super::display::Display;
-use crossterm::{queue, Goto, Terminal, PrintStyledFont, Colorize, Crossterm};
+use crossterm::{queue, Colorize, Crossterm, Goto, PrintStyledFont, Terminal};
 use std::io::Write;
 
 const pixel: &'static str = "█";

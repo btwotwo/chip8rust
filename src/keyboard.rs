@@ -67,7 +67,7 @@ impl Keyboard {
             .find_map(|event| match event {
                 InputEvent::Keyboard(event) => match event {
                     KeyEvent::Ctrl('c') => std::process::exit(0),
-                    _ => self.mapping.get(&event)
+                    _ => self.mapping.get(&event),
                 },
                 _ => None,
             })
