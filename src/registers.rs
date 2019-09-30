@@ -1,5 +1,6 @@
 use std::ops::{Index, IndexMut};
 
+#[derive(Debug)]
 pub struct Registers {
     regs: [u8; 16],
 }

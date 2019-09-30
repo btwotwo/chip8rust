@@ -117,14 +117,19 @@ type Row = u64;
 #[derive(Debug)]
 pub struct Display {
     pub contents: [Row; 32],
+    pub should_redraw: bool,
 }
 
 impl Display {
     pub fn new() -> Self {
-        Display { contents: [0; 32] }
+        Display {
+            contents: [0; 32],
+            should_redraw: false,
+        }
     }
 
     pub fn draw(&mut self, x: u8, y: u8, sprites: &[u8]) -> bool {
+        self.should_redraw = true;
         let mut collision = false;
 
         for (row_idx, part) in sprites.iter().enumerate() {
@@ -152,6 +157,10 @@ impl Display {
         }
 
         collision
+    }
+
+    pub fn clear(&mut self) {
+        self.contents = [0; 32];
     }
 }
 

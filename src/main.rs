@@ -8,11 +8,9 @@ use opcode::{Opcode, OpcodeHandler};
 use program_counter::ProgramCounter;
 use registers::Registers;
 
-use crossterm::{
-    input, Crossterm, InputEvent,
-    KeyEvent, RawScreen, Result, Show
-};
 use keyboard::Keyboard;
+
+use std::fmt;
 
 pub type Memory = [u8; 4096];
 pub type Stack = [u16; 16];
@@ -20,68 +18,26 @@ pub type Stack = [u16; 16];
 use screen::display::*;
 
 fn main() -> crossterm::Result<()> {
-    let mut display = Display::new();
-    let mut crossterm = screen::screen::init()?;
-    let keyboard = keyboard::Keyboard::new();
-    let mut x = 0u8;
-    let mut y = 0u8;
-    let mut previous = 1;
 
+    let bytecode = vec![
+        // simple program: print line, then beep
+        0x00, 0xE0, // clear screen
+        0x60, 0x20, // sets V0 to 32
+        0x61, 0x10, // sets V1 to 16
+        0xD0, 0x1F, //draw a line
+    ];
 
-    loop {
-        display.contents = [0; 32];
-        let input = input();
+    let mut chip = Chip::new();
 
-        let input = match input.read_sync().next() {
-            Some(InputEvent::Keyboard(event)) => match event {
-                KeyEvent::Ctrl('c') => std::process::exit(0),
-                KeyEvent::Down => {
-                    y = (y + 1) % 32;
-                    None
-                }
-                KeyEvent::Up => {
-                    y = y.overflowing_sub(1).0 % 32;
-                    None
-                }
-                KeyEvent::Right => {
-                    x = (x + 1) % 64;
-                    None
-                }
-                KeyEvent::Left => {
-                    x = x.overflowing_sub(1).0 % 64;
-                    None
-                }
-                _ => keyboard.mapping.get(&event),
-            },
-            _ => None,
-        };
-
-        match input {
-            Some(input) => {
-                previous = *input;
-            }
-            _ => (),
-        };
-        let symbol = &FONT[(previous * 5) as usize..(previous * 5 + 5) as usize];
-        display.draw(x, y, symbol);
-        screen::screen::redraw(&display, &mut crossterm)?;
-    }
+    chip.load_program(&bytecode);
+    chip.start();
 
     Ok(())
-
-    // let bytecode = vec![
-    //     // simple program: print line, then beep
-    //     0x00, 0xE0, // clear screen
-    //     0x60, 0x20, // sets V0 to 32
-    //     0x61, 0x10, // sets V1 to 16
-    //     0xD0, 0x1F, //draw a line
-    // ];
-
-    // let mut chip = Chip::new();
-
-    // chip.load_program(&bytecode);
 }
 
+
+
+#[derive(Debug)]
 pub struct Chip {
     pub memory: Memory,
 
@@ -107,8 +63,14 @@ pub struct Chip {
 
 impl Chip {
     pub fn new() -> Chip {
+        let mut memory = [0; 4096];
+
+        for (i, val) in screen::display::FONT.iter().enumerate() {
+            memory[i] = *val;
+        }
+
         Chip {
-            program_counter: ProgramCounter::new(0x200),
+            program_counter: ProgramCounter::new(512),
             memory: [0; 4096],
 
             v: Registers::new(),
@@ -132,20 +94,33 @@ impl Chip {
     }
 
     pub fn start(mut self) {
-        loop {
-            self.tick()
-        }
-    }
+        let mut display = screen::screen::init().unwrap();
 
-    fn tick(&mut self) {
-        //get and decode opcode
         let opcode = self.decode_opcode();
+        OpcodeHandler::next(opcode, &mut self);
 
-        //execute opcode
-        OpcodeHandler::next(opcode, self);
+        // loop {
+        //     self.screen.should_redraw = false;
+        //     //get and decode opcode
+        //     let opcode = self.decode_opcode();
 
-        //update timers
-        self.delay_timer += 1;
+        //     //execute opcode
+        //     OpcodeHandler::next(opcode, &mut self);
+
+        //     //update timers
+        //     if self.delay_timer > 0 {
+        //         self.delay_timer -= 1;
+        //     }
+
+        //     if self.sound_timer > 0 {
+        //         // todo: beep
+        //         self.sound_timer -= 1;
+        //     }
+
+        //     if self.screen.should_redraw {
+        //         screen::screen::redraw(&self.screen, &mut display).unwrap()
+        //     }
+        // }
     }
 
     fn decode_opcode(&self) -> Opcode {

@@ -14,6 +14,7 @@ macro_rules! key_map {
     };
 }
 
+#[derive(Debug)]
 pub struct Keyboard {
     keys: [bool; 0xF],
     pub mapping: HashMap<KeyEvent, u8>,
@@ -72,5 +73,21 @@ impl Keyboard {
                 _ => None,
             })
             .unwrap()
+    }
+
+    pub fn register_key_press(&mut self) {
+        let input = input();
+
+        match input.read_async().next() {
+            Some(InputEvent::Keyboard(event)) => match event {
+                KeyEvent::Ctrl('c') => std::process::exit(0),
+                _ => match self.mapping.get(&event) {
+                    Some(key) => self.keys[*key as usize] = true,
+                    None => self.keys = [false; 0xf]
+                },
+            },
+
+            _ => ()
+        }
     }
 }

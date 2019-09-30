@@ -16,8 +16,8 @@ pub fn redraw(display: &Display, term: &mut Crossterm) -> crossterm::Result<()> 
                 println!("{}", pixel);
             }
         }
-    };
-    
+    }
+
     Ok(())
 }
 
@@ -29,6 +29,8 @@ pub fn init() -> crossterm::Result<Crossterm> {
 
     match term.terminal().terminal_size() {
         size if (size.0 >= 64 && size.1 >= 32) => Ok(term),
-        _ => Err(crossterm::ErrorKind::ResizingTerminalFailure("Could not set expected size! Please set terminal to 64x32".to_string()))
+        _ => Err(crossterm::ErrorKind::ResizingTerminalFailure(
+            "Could not set expected size! Please set terminal to 64x32".to_string(),
+        )),
     }
 }

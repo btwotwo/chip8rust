@@ -1,7 +1,7 @@
 use super::registers::{Position, Registers};
 use super::Chip;
+use lazy_static::lazy_static;
 use std::collections::HashMap;
-use lazy_static::{lazy_static};
 
 macro_rules! opcode_func_map {
     ($($opcode:expr => $func: expr), *) => {
@@ -20,6 +20,7 @@ type OpcodeImpl = fn(Opcode, &mut Chip);
 
 lazy_static! {
     pub static ref OPCODE_MAP: HashMap<Opcode, OpcodeImpl> = opcode_func_map!(
+        0x00E0 => OpcodeHandler::clear,
         0x00EE => OpcodeHandler::ret,
         0x1000 => OpcodeHandler::jp,
         0x2000 => OpcodeHandler::call,
@@ -68,17 +69,20 @@ impl OpcodeHandler {
             _ => normalized_opcode,
         };
 
+        println!("{:?}", normalized_opcode);
+
         match OPCODE_MAP.get(&normalized_opcode) {
             Some(func) => func(opcode, chip),
-            None => {
-                println!("Opcode {} not found! Skipping...", opcode);
-            }
+            None => panic!("No opcode! {}", chip)
         };
 
         match normalized_opcode {
             0x1000 | 0x2000 | 0x00EE | 0xB000 => (), // JP, CALL, RET, JMPv0 opcodes
             _ => chip.program_counter.increment(),
         };
+    }
+    fn clear(opcode: Opcode, chip: &mut Chip) {
+        chip.screen.clear();
     }
 
     /// `00EE` - Return from a subroutine
