@@ -244,7 +244,7 @@ impl OpcodeHandler {
         let y = chip.v[(opcode, Position::Y)];
 
         let n = opcode & 0x000F;
-        let sprites = chip.memory[(chip.i as usize)..n as usize].to_vec();
+        let sprites: Vec<u8> = chip.memory.iter().cloned().skip(chip.i as usize).take(n as usize).collect();
 
         chip.v[0xF] = chip.screen.draw(x, y, &sprites) as u8;
     }

@@ -16,18 +16,18 @@ pub type Stack = [u16; 16];
 use screen::display::*;
 
 fn main() -> crossterm::Result<()> {
+    use std::fs;
+    use std::io::Read;
+    
+    let mut size = fs::metadata("test_opcode.ch8")?.len();
 
-    let bytecode = vec![
-        // simple program: print line, then beep
-        0x00, 0xE0, // clear screen
-        0x60, 0x20, // sets V0 to 32
-        0x61, 0x10, // sets V1 to 16
-        0xD0, 0x1F, //draw a line
-    ];
+    let mut buffer: Vec<u8> = Vec::with_capacity(size as usize);
+
+    fs::File::open("test_opcode.ch8")?.read_to_end(&mut buffer)?;
 
     let mut chip = Chip::new();
 
-    chip.load_program(&bytecode);
+    chip.load_program(&buffer);
     chip.start();
 
     Ok(())
