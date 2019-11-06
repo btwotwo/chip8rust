@@ -69,11 +69,11 @@ impl OpcodeHandler {
             _ => normalized_opcode,
         };
 
-        println!("{:?}", normalized_opcode);
+        // println!("{:?}", normalized_opcode);
 
         match OPCODE_MAP.get(&normalized_opcode) {
             Some(func) => func(opcode, chip),
-            None => panic!("No opcode! {}", chip)
+            None => panic!("Wrong opcode! {}", opcode)
         };
 
         match normalized_opcode {

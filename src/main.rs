@@ -10,8 +10,6 @@ use registers::Registers;
 
 use keyboard::Keyboard;
 
-use std::fmt;
-
 pub type Memory = [u8; 4096];
 pub type Stack = [u16; 16];
 
@@ -35,9 +33,8 @@ fn main() -> crossterm::Result<()> {
     Ok(())
 }
 
+ 
 
-
-#[derive(Debug)]
 pub struct Chip {
     pub memory: Memory,
 
@@ -97,30 +94,29 @@ impl Chip {
         let mut display = screen::screen::init().unwrap();
 
         let opcode = self.decode_opcode();
-        OpcodeHandler::next(opcode, &mut self);
 
-        // loop {
-        //     self.screen.should_redraw = false;
-        //     //get and decode opcode
-        //     let opcode = self.decode_opcode();
+        loop {
+            self.screen.should_redraw = false;
+            //get and decode opcode
+            let opcode = self.decode_opcode();
 
-        //     //execute opcode
-        //     OpcodeHandler::next(opcode, &mut self);
+            //execute opcode
+            OpcodeHandler::next(opcode, &mut self);
 
-        //     //update timers
-        //     if self.delay_timer > 0 {
-        //         self.delay_timer -= 1;
-        //     }
+            //update timers
+            if self.delay_timer > 0 {
+                self.delay_timer -= 1;
+            }
 
-        //     if self.sound_timer > 0 {
-        //         // todo: beep
-        //         self.sound_timer -= 1;
-        //     }
+            if self.sound_timer > 0 {
+                // todo: beep
+                self.sound_timer -= 1;
+            }
 
-        //     if self.screen.should_redraw {
-        //         screen::screen::redraw(&self.screen, &mut display).unwrap()
-        //     }
-        // }
+            if self.screen.should_redraw {
+                screen::screen::redraw(&self.screen, &mut display).unwrap()
+            }
+        }
     }
 
     fn decode_opcode(&self) -> Opcode {
