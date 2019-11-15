@@ -73,7 +73,7 @@ impl OpcodeHandler {
 
         match OPCODE_MAP.get(&normalized_opcode) {
             Some(func) => func(opcode, chip),
-            None => panic!("Wrong opcode! {}", opcode)
+            None => panic!("Wrong opcode! {}", opcode),
         };
 
         match normalized_opcode {
@@ -178,11 +178,13 @@ impl OpcodeHandler {
 
     ///`8XY5` - Subtract V[`Y`] from V[`X`], change carry flag if there's a borrow
     fn subreg(opcode: Opcode, chip: &mut Chip) {
-        let (result, carried) =
-            chip.v[(opcode, Position::X)].overflowing_sub(chip.v[(opcode, Position::Y)]);
+        let x = chip.v[(opcode, Position::X)];
+        let y = chip.v[(opcode, Position::Y)];
+        
+        let (result, carried) = x.overflowing_sub(y);
 
         chip.v[(opcode, Position::X)] = result;
-        chip.v.set_carry(carried);
+        chip.v.set_carry(!carried);
     }
 
     ///`8XY6` - Store least significant bit of V[`X`] in VF and then shift V[`X`] to the right by 1
@@ -199,7 +201,7 @@ impl OpcodeHandler {
 
         chip.v[(opcode, Position::X)] = result;
 
-        chip.v.set_carry(carried);
+        chip.v.set_carry(!carried);
     }
 
     ///`8XYE` - Stores the most significant bit of V[`X`] in VF and then shifts V[`X`] to the left by 1
@@ -244,7 +246,12 @@ impl OpcodeHandler {
         let y = chip.v[(opcode, Position::Y)];
 
         let n = opcode & 0x000F;
-        let sprites: Vec<u8> = chip.memory.iter().cloned().skip(chip.i as usize).take(n as usize).collect();
+        let sprites: Vec<&u8> = chip
+            .memory
+            .iter()
+            .skip(chip.i as usize)
+            .take(n as usize)
+            .collect();
 
         chip.v[0xF] = chip.screen.draw(x, y, &sprites) as u8;
     }
@@ -291,12 +298,17 @@ impl OpcodeHandler {
 
     ///`FX1E` - Set I equal to V[`X`] + I
     fn addivx(opcode: Opcode, chip: &mut Chip) {
-        chip.i += u16::from(chip.v[(opcode, Position::X)]);
+        let to_add = u16::from(chip.v[(opcode, Position::X)]);
+        let (result, carried) = chip.i.overflowing_add(to_add);
+
+        chip.i = result;
+        chip.v.set_carry(carried);
     }
 
     ///`FX29` - Set I equal to sprite location for digit V[`X`]
     fn ldfvx(opcode: Opcode, chip: &mut Chip) {
-        chip.i = (5 * chip.v[(opcode, Position::X)]).into()
+        let num = 5 * chip.v[(opcode, Position::X)];
+        chip.i = num.into()
     }
 
     ///`FX33` - Store BCD representation of V[`X`] to I, I+1, I+2
@@ -313,14 +325,14 @@ impl OpcodeHandler {
 
     ///`FX55` - Store registers V0 through V[`X`] in memory starting at location I.`
     fn ldiv0vx(opcode: Opcode, chip: &mut Chip) {
-        for idx in 0..Registers::get_index(opcode, Position::X) {
+        for idx in 0..=Registers::get_index(opcode, Position::X) {
             chip.memory[(chip.i + u16::from(idx)) as usize] = chip.v[idx];
         }
     }
 
     ///`FX65` - Read registers V0 through V[`X`] from memory starting at location I.
     fn ldv0vxi(opcode: Opcode, chip: &mut Chip) {
-        for idx in 0..Registers::get_index(opcode, Position::X) {
+        for idx in 0..=Registers::get_index(opcode, Position::X) {
             chip.v[idx] = chip.memory[(chip.i + u16::from(idx)) as usize];
         }
     }

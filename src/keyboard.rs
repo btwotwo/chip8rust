@@ -83,11 +83,11 @@ impl Keyboard {
                 KeyEvent::Ctrl('c') => std::process::exit(0),
                 _ => match self.mapping.get(&event) {
                     Some(key) => self.keys[*key as usize] = true,
-                    None => self.keys = [false; 0xf]
+                    None => self.keys = [false; 0xf],
                 },
             },
 
-            _ => ()
+            _ => (),
         }
     }
 }

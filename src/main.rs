@@ -18,12 +18,14 @@ use screen::display::*;
 fn main() -> crossterm::Result<()> {
     use std::fs;
     use std::io::Read;
-    
-    let mut size = fs::metadata("test_opcode.ch8")?.len();
+
+    let filename = "test_opcode.ch8";
+
+    let mut size = fs::metadata(filename)?.len();
 
     let mut buffer: Vec<u8> = Vec::with_capacity(size as usize);
 
-    fs::File::open("test_opcode.ch8")?.read_to_end(&mut buffer)?;
+    fs::File::open(filename)?.read_to_end(&mut buffer)?;
 
     let mut chip = Chip::new();
 
@@ -32,8 +34,6 @@ fn main() -> crossterm::Result<()> {
 
     Ok(())
 }
-
- 
 
 pub struct Chip {
     pub memory: Memory,
@@ -68,7 +68,7 @@ impl Chip {
 
         Chip {
             program_counter: ProgramCounter::new(512),
-            memory: [0; 4096],
+            memory,
 
             v: Registers::new(),
 
@@ -91,14 +91,14 @@ impl Chip {
     }
 
     pub fn start(mut self) {
-        let mut display = screen::screen::init().unwrap();
-
-        let opcode = self.decode_opcode();
+        let (mut display, _alternate_screen) = screen::screen::init().unwrap();
 
         loop {
             self.screen.should_redraw = false;
             //get and decode opcode
             let opcode = self.decode_opcode();
+
+            // self.keyboard.register_key_press();
 
             //execute opcode
             OpcodeHandler::next(opcode, &mut self);

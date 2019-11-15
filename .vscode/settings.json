@@ -1,0 +1,7 @@
+{
+    "lldb.displayFormat": "hex",
+    "lldb.showDisassembly": "auto",
+    "lldb.dereferencePointers": true,
+    "hexdump.width": 8,
+    "hexdump.nibbles": 4
+}

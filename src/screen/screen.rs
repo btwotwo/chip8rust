@@ -1,5 +1,5 @@
 use super::display::Display;
-use crossterm::{Crossterm, RawScreen};
+use crossterm::{AlternateScreen, Crossterm, RawScreen};
 
 const pixel: &'static str = "█";
 
@@ -21,16 +21,18 @@ pub fn redraw(display: &Display, term: &mut Crossterm) -> crossterm::Result<()> 
     Ok(())
 }
 
-pub fn init() -> crossterm::Result<Crossterm> {
+pub fn init() -> crossterm::Result<(Crossterm, AlternateScreen)> {
     let term = Crossterm::new();
-    RawScreen::into_raw_mode()?.disable_drop();
+    let alternate = AlternateScreen::to_alternate(true)?;
     term.cursor().hide()?;
-    term.terminal().set_size(32, 64)?;
+    term.terminal().set_size(64, 32)?;
 
-    match term.terminal().terminal_size() {
-        size if (size.0 >= 64 && size.1 >= 32) => Ok(term),
-        _ => Err(crossterm::ErrorKind::ResizingTerminalFailure(
-            "Could not set expected size! Please set terminal to 64x32".to_string(),
-        )),
-    }
+    // match term.terminal().terminal_size() {
+    //     size if (size.0 >= 64 && size.1 >= 32) => Ok((term, alternate)),
+    //     _ => Err(crossterm::ErrorKind::ResizingTerminalFailure(
+    //         "Could not set expected size! Please set terminal to 64x32".to_string(),
+    //     )),
+    // }
+
+    Ok((term, alternate))
 }
