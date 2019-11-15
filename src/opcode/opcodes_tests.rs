@@ -238,7 +238,7 @@ fn subreg_test() {
 
     assert_eq!(chip.v[0], 0x1F);
     assert_eq!(chip.v[1], 0x01);
-    assert_eq!(chip.v[0xF], 0);
+    assert_eq!(chip.v[0xF], 1);
 }
 
 #[test]
@@ -253,7 +253,7 @@ fn subreg_carry_test() {
 
     assert_eq!(chip.v[0], 0xFF);
     assert_eq!(chip.v[1], 0x01);
-    assert_eq!(chip.v[0xF], 1);
+    assert_eq!(chip.v[0xF], 0);
 }
 
 #[test]
@@ -280,7 +280,7 @@ fn sub_test() {
     OpcodeHandler::sub(0x8107, &mut chip);
 
     assert_eq!(chip.v[1], 255);
-    assert_eq!(chip.v[0xF], 1);
+    assert_eq!(chip.v[0xF], 0);
 }
 
 #[test]
@@ -294,7 +294,7 @@ fn sub_test_overflow() {
     OpcodeHandler::sub(0x8017, &mut chip);
 
     assert_eq!(chip.v[0], 1);
-    assert_eq!(chip.v[0xF], 0);
+    assert_eq!(chip.v[0xF], 1);
 }
 
 #[test]
