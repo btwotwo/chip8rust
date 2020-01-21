@@ -180,7 +180,7 @@ impl OpcodeHandler {
     fn subreg(opcode: Opcode, chip: &mut Chip) {
         let x = chip.v[(opcode, Position::X)];
         let y = chip.v[(opcode, Position::Y)];
-        
+
         let (result, carried) = x.overflowing_sub(y);
 
         chip.v[(opcode, Position::X)] = result;

@@ -6,6 +6,6 @@ edition = "2018"
 
 [dependencies]
 rand = "0.7.0"
-crossterm = "^0.10"
+crossterm = "0.14.2"
 lazy_static = "1.4.0"
 bit-vec = "0.6"

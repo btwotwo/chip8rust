@@ -1,13 +1,14 @@
-use crossterm::input;
-use crossterm::{InputEvent, KeyEvent};
+use crossterm::event::KeyModifiers;
+use crossterm::event::{poll, read, Event, KeyCode, KeyEvent};
+
 use std::collections::HashMap;
 
 macro_rules! key_map {
     ($($key:expr => $val: expr), *) => {
         {
-            let mut map = HashMap::<KeyEvent, u8>::new();
+            let mut map = HashMap::<KeyCode, u8>::new();
             $(
-                map.insert(KeyEvent::Char($key), $val);
+                map.insert(KeyCode::Char($key), $val);
             )*
             map
         }
@@ -16,14 +17,14 @@ macro_rules! key_map {
 
 #[derive(Debug)]
 pub struct Keyboard {
-    keys: [bool; 0xF],
-    pub mapping: HashMap<KeyEvent, u8>,
+    keys: [bool; 0xF + 1],
+    pub mapping: HashMap<KeyCode, u8>,
 }
 
 impl Keyboard {
     pub fn new() -> Self {
         Keyboard {
-            keys: [false; 0xF],
+            keys: [false; 0xF + 1],
             mapping: key_map!(
                 '1' => 0x1,
                 '2' => 0x2,
@@ -53,7 +54,7 @@ impl Keyboard {
         self.keys[index as usize]
     }
 
-    pub fn press(&mut self, key: KeyEvent, state: bool) {
+    pub fn press(&mut self, key: KeyCode, state: bool) {
         if self.mapping.contains_key(&key) {
             let index = self.mapping[&key];
             self.keys[index as usize] = state
@@ -61,33 +62,46 @@ impl Keyboard {
     }
 
     pub fn wait_for_key(&self) -> u8 {
-        let input = input();
-
-        *input
-            .read_sync()
-            .find_map(|event| match event {
-                InputEvent::Keyboard(event) => match event {
-                    KeyEvent::Ctrl('c') => std::process::exit(0),
-                    _ => self.mapping.get(&event),
-                },
-                _ => None,
-            })
-            .unwrap()
+        loop {
+            match read().unwrap() {
+                Event::Key(event) => {
+                    if event.modifiers.contains(KeyModifiers::CONTROL)
+                        && event.code == KeyCode::Char('c')
+                    {
+                        std::process::exit(0)
+                    } else {
+                        let key = self.mapping.get(&event.code);
+                        if let Some(key) = key {
+                            return key.clone();
+                        } else {
+                            continue;
+                        }
+                    }
+                }
+                _ => continue,
+            }
+        }
     }
 
     pub fn register_key_press(&mut self) {
-        let input = input();
+        use std::time::Duration;
 
-        match input.read_async().next() {
-            Some(InputEvent::Keyboard(event)) => match event {
-                KeyEvent::Ctrl('c') => std::process::exit(0),
-                _ => match self.mapping.get(&event) {
-                    Some(key) => self.keys[*key as usize] = true,
-                    None => self.keys = [false; 0xf],
+        if poll(Duration::from_millis(5)).unwrap() {
+            match read().unwrap() {
+                Event::Key(event) => {
+                    if event.modifiers.contains(KeyModifiers::CONTROL)
+                        && event.code == KeyCode::Char('c')
+                    {
+                        std::process::exit(0)
+                    } else {
+                        match self.mapping.get(&event.code) {
+                            Some(key) => self.keys[*key as usize] = true,
+                            None => self.keys = [false; 0xf + 1],
+                        }
+                    }
                 },
-            },
-
-            _ => (),
+                _ => ()
+            }
         }
     }
 }

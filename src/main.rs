@@ -19,7 +19,7 @@ fn main() -> crossterm::Result<()> {
     use std::fs;
     use std::io::Read;
 
-    let filename = "test_opcode.ch8";
+    let filename = "race.ch8";
 
     let mut size = fs::metadata(filename)?.len();
 
@@ -91,14 +91,14 @@ impl Chip {
     }
 
     pub fn start(mut self) {
-        let (mut display, _alternate_screen) = screen::screen::init().unwrap();
+        screen::screen::init().unwrap();
 
         loop {
             self.screen.should_redraw = false;
             //get and decode opcode
             let opcode = self.decode_opcode();
 
-            // self.keyboard.register_key_press();
+            self.keyboard.register_key_press();
 
             //execute opcode
             OpcodeHandler::next(opcode, &mut self);
@@ -114,7 +114,7 @@ impl Chip {
             }
 
             if self.screen.should_redraw {
-                screen::screen::redraw(&self.screen, &mut display).unwrap()
+                screen::screen::redraw(&self.screen).unwrap()
             }
         }
     }
